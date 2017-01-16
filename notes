@@ -1,0 +1,6 @@
+Overspending tested
+
+Removed approve, approveAndCall and transferFrom function
+
+When minting, include decimal digits and owner address.
+

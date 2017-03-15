@@ -68,7 +68,7 @@ contract SoarcoinImplementation is Owned, Token {
     uint256 public totalSupply;
     uint flag = 0;
            
-    function Soarcoin(uint256 _totalSupply) { 
+    function SoarcoinImplementation(uint256 _totalSupply) { 
         balances[owner] = _totalSupply; 
         totalSupply = _totalSupply;
     }    

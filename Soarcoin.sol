@@ -1,4 +1,6 @@
 pragma solidity ^0.4.8;
+
+import "SoarcoinInterface.sol";
 contract Soarcoin {
 
     mapping (address => uint256) balances;               // each address in this contract may have tokens. 
@@ -6,7 +8,8 @@ contract Soarcoin {
     string public name = "Soarcoin";                     // name of this contract and investment fund
     string public symbol = "SOAR";                       // token symbol
     uint8 public decimals = 6;                           // decimals (for humans)
-    uint256 public totalSupply = 5000000000000000;  
+    uint256 public totalSupply = 5000000000000000;
+    uint flag = 0;
            
     modifier onlyOwner()
     {
@@ -29,17 +32,22 @@ contract Soarcoin {
     function transfer(address _to, uint256 _value) returns (bool success)
     {
         if(_value <= 0) throw;                                      // Check send token value > 0;
-        if (balances[msg.sender] < _value) throw;                   // Check if the sender has enough
-        if (balances[_to] + _value < balances[_to]) throw;          // Check for overflows                          
+        if (balances[msg.sender] < _value) return false;                   // Check if the sender has enough
+        if (balances[_to] + _value < balances[_to]) return false;          // Check for overflows                          
         balances[msg.sender] -= _value;                             // Subtract from the sender
         balances[_to] += _value;                                    // Add the same to the recipient, if it's the contact itself then it signals a sell order of those tokens                       
         Transfer(msg.sender, _to, _value);                          // Notify anyone listening that this transfer took place
         return true;      
     }
 
+	function stopMint() onlyOwner
+	{
+		flag = 1;
+	}	
+	
     function mint(address _to, uint256 _value) onlyOwner
     {
-        if(_value <= 0) throw;
+        if(_value <= 0 && flag == 0) throw;
     	balances[_to] += _value;
     	totalSupply += _value;
     }
@@ -91,6 +99,3 @@ contract Token is Soarcoin {
 /**
  * ERC 20 token
  *
- * https://github.com/ethereum/EIPs/issues/20
- */
-    

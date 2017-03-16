@@ -66,7 +66,7 @@ contract SoaroinImplementation is Owned, Token {
     string public name = "Soarcoin";                     // name of this contract and investment fund
     string public symbol = "SOAR";                       // token symbol
     uint8 public decimals = 6;                           // decimals (for humans)
-    uint256 _totalSupply = 500000000000000000000;
+    uint256 _totalSupply = 5000000000000000;
     uint8 flag = 0;
 
     function SoarcoinImplementation() {

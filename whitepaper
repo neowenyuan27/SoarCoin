@@ -1,7 +1,7 @@
 SoarCoin
 
 Created by neowenyuan27
-January 2017
+March 2017
 
 
 
@@ -14,7 +14,7 @@ Do we really need so many cryptocurrencies in this world we live in? It is fores
 would not be used in the world in future, and at the same time, the number of cryptocurrencies will grow massively in the next 5 years.
 Cryptocurrency has a very huge potential for now, and it has the ability to change the world in terms of banking, payment and probably
 more that we cannot imagine as of yet. And that is why, more cryptocurrencies with wonderful developers will come out in the near future
-with many more wonderful ideas.So, why SoarCoin?
+with many more wonderful ideas. So, why SoarCoin?
 
 
 
@@ -49,19 +49,40 @@ needless to create nodes to ensure the speed of transaction.
 
 Users will need to create and adopt Ethereum wallet first, before being able to use our coin. After doing so, by adding SoarCoin's contract
 address in wallet, users will be able to receive and send out SoarCoin. Because of many wonderful developers in Ethereum, most of these
-procederes can be completed easily and securely
+procederes can be completed easily and securely.
 
 
--Holders' Benefit
+-Holders' Benefit (Proposed)
 
 By holding SoarCoins, holders, such as shop vendors and shoppers, will get an interest on an annual basis. As SoarCoin will be used to 
 replace the value of cash in future, interests for holders will be neccessary. This will encourage shop vendors to adopt SoarCoin at a
-faster rate, at the same time, spenders will be more willing to spend SoarCoin and start using SoarCoin as a paying method, instead of 
+faster rate, at the same time, spenders will be encouraged to spend SoarCoin and start using SoarCoin as a paying method, instead of 
 using fiat. In this case, the traditional paying method that requires a spender to pay more because of currency difference, would be
 removed, and thus, it'll be easier for spenders to understand the actual value of something the spender would like to buy. Interest
-payouts will vary in every year. 
+payouts will. 
 
-This will be the only way, where more SoarCoin can be created.
+SoarCoin, at its initial stage, needs to be distributed differently compared to most decentralised tokens. For SoarCoin to reach its best
+potential, SoarCoins will be distributed by participating vendors or companies. They will distribute SoarCoins to allow their loyal 
+customers to use SoarCoins, and make transactions through their online platform. In the near future, businesses with shop fronts, might 
+be able to accept payments as well using our wallet application. 
+
+Such a way of distribution, may seem unfair to the public, especially to some who might be interested in having some SoarCoins token.
+We'll be putting up 5-10% of the total supply of SoarCoins to be on sale on some exchanges. For each participating business, they can be
+allocated up to 10% of total supply, depending on the scale of business. SoarCoins management team will have control over the distribution
+by participating companies. So as to ensure the price of SoarCoin to remain stable, and most importantly, not be affected negatively
+when companies release too much coins to the market. 
+
+So, what happens when we've finished distributing all the SoarCoins? SoarCoin owns a mint token function. If it comes a time where SoarCoin
+needs to be minted to cater to more businesses, it will be done in a delicate way. No doubt, dilution of price may occur. There exist many
+ways to solve this issue, one way we can explore will be, instead of distributing a fixed share of 5-10% of total supply to businesses, a 
+fixed share of the total supply, can instead be allocated for businesses. From the fixed share of total supply, new participating businesses
+or companies will then be added to the pool, and shares will be distributed based on the allocated pool. Of course under this scenario,
+participating businesses will not be allowed to hold or own any SoarCoins. Their role over here can only be a distributor of SoarCoin,
+and merchants accepting SoarCoin as payment. 
+
+However, none of these can be confirmed as SoarCoin needs to be as flexible as possible, in order to achieve a stable price in the crypto-
+currency market. Implementations or actions taken in future will however, be along the line as mentioned above.
+
 
 
 -Eligibility for interest payouts
@@ -82,7 +103,9 @@ users who completes x number of transactions within the designated time frame, t
 
 As SoarCoin leverages on Ethereum's network and blockchain. It is definitely right, for transaction fees to be in Ethers. Thus, for users
 to send SoarCoin, users will need to have a small amount of Ether in their wallet. These are called gas. For most transactions that will
-take place using SoarCoin, the amount of gas to be used will be very insignificant. 
+take place using SoarCoin, the amount of gas to be used will be very insignificant. These may change in the future, and hopefully 
+SoarCoin will be able to function without the need of transaction fees. After all, one of the reason Soarcoin should be adopted is because
+to avoid paying for currency differences and other administrative fees.
 
 
 

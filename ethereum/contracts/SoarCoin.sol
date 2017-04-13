@@ -2,22 +2,24 @@ pragma solidity ^0.4.8;
 
 import "./Owned.sol";
 import "./Token.sol";
-import "./SoarCoinImplementation.sol";
+import "./SoarCoinImplementationV01.sol";
 
 contract SoarCoin is Owned, Token {
 
-    SoarCoinImplementation implementation;
+    SoarCoinImplementationV01 implementation;
 
-    function SoarCoin(SoarCoinImplementation _implementation) {
+    function SoarCoin(SoarCoinImplementationV01 _implementation) {
         implementation = _implementation;
     }
 
     function transferOwnership(address _newOnwer) onlyOwner {
-        implementation.transfer(_owner, _newOnwer, balanceOf(_owner));
-        _owner = _newOnwer;        
+        if(msg.sender == _owner){
+            implementation.transfer(_owner, _newOnwer, balanceOf(_owner));
+            _owner = _newOnwer;
+        }
     }
 
-    function setImplementation(SoarCoinImplementation _implementation) onlyOwner {
+    function setImplementation(SoarCoinImplementationV01 _implementation) onlyOwner {
         implementation = _implementation;
     }
 

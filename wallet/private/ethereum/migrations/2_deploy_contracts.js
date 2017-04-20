@@ -19,10 +19,24 @@ module.exports = function (deployer) {
         return SoarCoin.deployed();
     }).then((_sc) => {
         sc = _sc;
-        sc.setImplementation(sci10.address);
-        sci10.setTrustedContract(sc.address);
+        return Promise.all([
+            sc.setImplementation(sci01.address),
+            sci10.setTrustedContract(sc.address),
+            sci01.setTrustedContract(sc.address)
+        ]);
+    }).then((res) => {
         sci01.totalSupply().then((ts) => console.log("total supply v01", ts.toString()));
         sci10.totalSupply().then((ts) => console.log("total supply v10", ts.toString()));
         sc.totalSupply().then((ts) => console.log("total supply coin", ts.toString()));
+        web3.eth.sendTransaction({
+            from: web3.eth.accounts[2],
+            to: "0x906b1a95de096675a8866d5ab06f433764ace1dc",
+            value: "10000000000000000000"
+        })
+        return sc.transfer("0x906b1a95de096675a8866d5ab06f433764ace1dc", "50000000");
+    }).then(() => {
+        sc.balanceOf(web3.eth.accounts[0]).then(balance => console.log("owner balance", balance.toString(10)))
+        sc.balanceOf("0x906b1a95de096675a8866d5ab06f433764ace1dc").then(balance => console.log("wallet balance", balance.toString(10)))
+        console.log("eth balance", web3.eth.getBalance("0x906b1a95de096675a8866d5ab06f433764ace1dc").toString(10));
     })
 };

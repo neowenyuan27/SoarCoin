@@ -1,0 +1,12 @@
+{
+  "public": {
+    "password": "123",
+    "username": "micha@roon.me",
+    "recipientAddress": "0xce0d46d924cc8437c806721496599fc3ffa268b9",
+    "transferAmount": "0.02",
+    "ethNodeAddress": "http://localhost:8585",
+    "contractEvents": "http://localhost:8585"
+  },
+  "chain": "develop",
+  "ethPassword": "abc123"
+}

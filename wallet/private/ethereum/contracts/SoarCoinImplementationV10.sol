@@ -16,7 +16,7 @@ contract SoarCoinImplementationV10 is Owned, Utils {
     bytes4 _symbol = "SOAR";               // token symbol
     uint8 _decimals = 24;                  // decimals (for humans) must be smaller than Wei because the value of SOAR might be lower than ETH
     uint256 _totalSupply;
-    uint256 wei4soar;
+    uint256 public wei4soar;
     SoarCoinImplementationV01 previousVersion;
 
     uint8 flag = 0;

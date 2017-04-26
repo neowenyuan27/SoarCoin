@@ -133,7 +133,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                     })
                 })
                 .then(function (receipt) {
-                    Meteor.callPromise("update-balances", self.state.recipientAddress)
+                    Meteor.callPromise("sync-user-details")
                         .then(function () {
                             self.props.wait.hide();
                         });

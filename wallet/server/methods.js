@@ -1,9 +1,8 @@
-import {getWeb3, soar} from "../imports/ethereum/ethereum-services";
-import {callContractMethod, createRawValueTx} from "../imports/ethereum/ethereum-contracts";
-import {Profiles, currentProfile} from "../imports/model/profiles";
-import {HTTP} from 'meteor/http'
-import {Random} from 'meteor/random'
-import {Email} from 'meteor/email'
+import {callContractMethod} from "../imports/ethereum/ethereum-contracts";
+import {currentProfile, Profiles} from "../imports/model/profiles";
+import {HTTP} from "meteor/http";
+import {Random} from "meteor/random";
+import {Email} from "meteor/email";
 
 const syncBalance = function (address) {
     return callContractMethod("SoarCoin", "balanceOf", address)
@@ -83,14 +82,4 @@ Meteor.methods({
         if (profile) return profile.email;
         return null;
     },
-
-    "update-balances": function (recipientAddress) {
-        return new Promise(function (resolve, reject) {
-            Meteor.setTimeout(Meteor.bindEnvironment(function () {
-                syncBalance(currentProfile().address);
-                syncBalance(recipientAddress);
-                resolve();
-            }), 0);
-        })
-    }
 });

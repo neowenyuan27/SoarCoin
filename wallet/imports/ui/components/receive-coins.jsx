@@ -60,7 +60,7 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
                 <QRCode
                     value={qrValue}
                     size={256}
-                    level="Q"
+                    level="H"
                     bgColor="#FFFFFF"
                     fgColor="#000000"
                     onClick={this._toggleBigQr}

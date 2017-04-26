@@ -22,7 +22,7 @@ export default class WalletAppBar extends TrackerReact(PureComponent) {
 
         this.state = {
             open: false,
-            toastOpen: true,
+            toastOpen: false,
             toastMessage: "toast message",
             autoHideDuration: 4000,
         };

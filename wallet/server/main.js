@@ -100,16 +100,7 @@ const transferEventCallback = Meteor.bindEnvironment(function (error, transfer) 
     }
 });
 
-function startListener(previousListener) {
-    try {
-        if (previousListener) {
-            logger.info("stopped previous listener");
-            previousListener.stopWatching();
-        }
-    } catch (error) {
-        logger.error(error)
-    }
-
+function startListener() {
     return eventListener("SoarCoinImplementation", "Transfer", null, transferEventCallback);
 }
 
@@ -148,9 +139,18 @@ Meteor.startup(() => {
             transferEventListener = listener;
 
             Meteor.setInterval(Meteor.bindEnvironment(function () {
-                startListener(transferEventListener).then(
-                    (listener) => transferEventListener = listener);
-            }), 600000)
+                startListener().then(
+                    (listener) => {
+                        try {
+                            logger.info("stopped previous listener");
+                            transferEventListener.stopWatching();
+                        } catch (error) {
+                            logger.error(error)
+                        }
+
+                        transferEventListener = listener
+                    });
+            }), 60000)
         })
     );
 })

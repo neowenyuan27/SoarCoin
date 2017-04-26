@@ -14,7 +14,7 @@ contract SoarCoinImplementationV10 is Owned, Utils {
     mapping (address => bool) ethless;     // the addresses registered to get a refund on their TX costs
     bytes8 _name = "Soarcoin";             // name of this contract and investment fund
     bytes4 _symbol = "SOAR";               // token symbol
-    uint8 _decimals = 24;                  // decimals (for humans) must be smaller than Wei because the value of SOAR might be lower than ETH
+    uint8 _decimals = 6;                  // decimals (for humans) must be smaller than Wei because the value of SOAR might be lower than ETH
     uint256 _totalSupply;
     uint256 public wei4soar;
     SoarCoinImplementationV01 previousVersion;
@@ -50,7 +50,7 @@ contract SoarCoinImplementationV10 is Owned, Utils {
         txAccount = _txAccount;
         oracleAccount = _oracleAccount;
         wei4soar = _wei4soar; //set the price of SOAR in WEI
-        _totalSupply = _previousVersion.totalSupply() * 1000000000000000000;
+        _totalSupply = _previousVersion.totalSupply();
     }
 
     function setTrustedContract(address _contractAddress) onlyOwner {
@@ -87,7 +87,7 @@ contract SoarCoinImplementationV10 is Owned, Utils {
     {
         balance = balances[_coinHolder];
         //TODO: only access previous contract if needed
-        balance += previousVersion.balanceOf(_coinHolder) * 1000000000000000000;
+        balance += previousVersion.balanceOf(_coinHolder);
         return balance;
     }
 
@@ -98,7 +98,7 @@ contract SoarCoinImplementationV10 is Owned, Utils {
         if (_value <= 0) return false;
 //TODO: optimize gas usage for migration
         registered[_from] = true;
-        balances[_from] += previousVersion.balanceOf(_from) * 1000000000000000000;
+        balances[_from] += previousVersion.balanceOf(_from);
         previousVersion.transfer(_from, voidAccount, previousVersion.balanceOf(_from));
 
     // Check if the sender has enough

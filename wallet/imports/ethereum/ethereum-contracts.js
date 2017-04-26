@@ -62,16 +62,24 @@ export const callContractMethod = function (contract, funcName) {
 /*start listening for events of this type*/
 export const eventListener = function (contractName, eventName, filter, callback) {
     //TODO: verify that contract[eventName] is an event and that it exists
-    return getContract(contractName, true).then((contract) => {
-        let event;
-        if(eventName){
-            event = contract[eventName](filter, {fromBlock: 'latest', toBlock: 'latest'});
-        } else {
-            event = contract.allEvents(filter, {fromBlock: 'latest', toBlock: 'latest'});
-        }
-        event.watch(callback);
-        return event;
-    })
+    return getContract(contractName, true)
+        .then((contract) => {
+            try {
+                let event;
+                if (eventName) {
+                    event = contract[eventName](filter, {fromBlock: 'latest', toBlock: 'latest'});
+                } else {
+                    event = contract.allEvents(filter, {fromBlock: 'latest', toBlock: 'latest'});
+                }
+                if (typeof callback === "function")
+                    event.watch(callback);
+
+                return event;
+            } catch (error) {
+                logger.error(error);
+                throw new Meteor.Error(error);
+            }
+        })
 };
 
 const getNonce = function (profile) {
@@ -156,7 +164,12 @@ export const createRawTx = function (contractName, funcName, value) {
 };
 
 export const submitRawTx = function (rawTxHexString) {
-    var txHash = getWeb3().sha3(rawTxHexString, {encoding: 'hex'});
+    let txHash = null;
+    if (rawTxHexString.length > 2 && rawTxHexString.slice(0, 2) === '0x') {
+        txHash = getWeb3().sha3(rawTxHexString.substr(2), {encoding: 'hex'});
+    } else {
+        txHash = getWeb3().sha3(rawTxHexString, {encoding: 'hex'});
+    }
     console.log("computed hash is", txHash);
     return new Promise((resolve, reject) => {
         if (!getWeb3().eth.getTransaction(txHash)) {

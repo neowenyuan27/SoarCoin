@@ -2,7 +2,7 @@
  * In this file, we create a React component
  * which incorporates components provided by Material-UI.
  */
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import {deepOrange500} from 'material-ui/styles/colors';
@@ -13,6 +13,8 @@ import WalletAppBar from './components/app-bar';
 import WalletBottomNavigation from './components/bottom-navigation';
 import LoginDialog from './components/login';
 import Wait from './components/wait';
+import TrackerReact from "meteor/ultimatejs:tracker-react";
+import PleaseConfirm from "./components/please-confirm";
 
 const styles = {
     container: {
@@ -22,7 +24,7 @@ const styles = {
 };
 
 
-class Main extends Component {
+class Main extends TrackerReact(PureComponent) {
     constructor(props, context) {
         super(props, context);
 
@@ -82,7 +84,9 @@ class Main extends Component {
                     <WalletAppBar/>
                     <LoginDialog wait={this._wait()} setPassword={this._setPassword}/>
                     <WalletBottomNavigation wait={this._wait()} password={this.state.password}/>
+
                     <Wait show={this.state.showWait}/>
+                    <PleaseConfirm/>
                 </div>
             </MuiThemeProvider>
         );

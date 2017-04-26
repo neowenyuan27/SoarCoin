@@ -32,6 +32,12 @@ export const getWeb3 = (event) => {
             eventWeb3 = w3;
         else
             initialisedWeb3 = w3;
+        try{
+            let latestBlock = w3.eth.getBlock(w3.eth.blockNumber);
+        } catch (error) {
+            logger.error(error);
+            throw new Meteor.Error(error);
+        }
     }
     return w3;
 };
@@ -67,7 +73,7 @@ export const getKeystore = ((password) => {
                 let mnemonic;
                 let salt;
                 let email;
-                if(Meteor.isClient){
+                if (Meteor.isClient) {
                     mnemonic = LocalStorage.getItem('encrypted-mnemonic');
                     salt = LocalStorage.getItem('salt');
                     email = LocalStorage.getItem('email');

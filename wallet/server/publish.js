@@ -1,6 +1,7 @@
-import {Profiles, Roles} from "../import/model/profiles";
-import {Globals} from "../import/model/globals";
-import {add0x} from "../import/ethereum/ethereum-services";
+import {Profiles, Roles} from "../imports/model/profiles";
+import {Globals} from "../imports/model/globals";
+import {Transactions} from "../imports/model/transactions";
+import {add0x} from "../imports/ethereum/ethereum-services";
 
 Meteor.startup (() => {
 });
@@ -23,3 +24,8 @@ Meteor.publish("documents", function () {
 Meteor.publish("globals", function () {
     return Globals.find({});
 });
+
+Meteor.publish("transactions", function () {
+    let address = add0x(Meteor.users.findOne({_id: this.userId}).username);
+    return Transactions.find({$or: [{from: address}, {to: address}]}, {sort: {timestamp: -1}, limit: 100});
+})

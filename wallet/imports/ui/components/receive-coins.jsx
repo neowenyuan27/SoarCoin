@@ -56,6 +56,7 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
         //TODO: when amount is not 0 listen for transfer event
         return (
             <div style={style}>
+                <div>
                 <QRCode
                     value={qrValue}
                     size={256}
@@ -64,6 +65,8 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
                     fgColor="#000000"
                     onClick={this._toggleBigQr}
                 />
+                </div>
+                <form>
                 <TextField
                     id="amount"
                     type="number"
@@ -76,6 +79,7 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
                     onChange={this._handleChange}
                     ref={(input) => this.amountInput = input}
                 />
+                </form>
 
             </div>
         )

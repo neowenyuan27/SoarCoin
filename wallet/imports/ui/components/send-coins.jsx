@@ -6,10 +6,9 @@ import TextField from "material-ui/TextField";
 import RaisedButton from 'material-ui/RaisedButton';
 import QrReader from "./qr-reader/qr-reader"
 import enMsg from "../i18n/en-labels.json";
-import {isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
+import {getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
 import {eventListener, createRawTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";
-import {currentProfile} from "../../model/profiles";
 
 const styles = {
     title: {
@@ -23,9 +22,9 @@ export default class SendCoins extends TrackerReact(PureComponent) {
 
         this.state = {
             readQr: false,
-            recipientAddress: Meteor.settings.public.recipientAddress,
+            recipientAddress: Meteor.settings.public.recipientAddress || "",
             recipientName: "",
-            amount: Meteor.settings.public.transferAmount,
+            amount: Meteor.settings.public.transferAmount || "0",
             previewStyle: {
                 height: 400,
                 width: 150,
@@ -39,7 +38,6 @@ export default class SendCoins extends TrackerReact(PureComponent) {
         this._getQrValue = this._getQrValue.bind(this);
         this._validateAddress = this._validateAddress.bind(this);
         this._validateAmount = this._validateAmount.bind(this);
-        this._transferEvent = this._transferEvent.bind(this);
         this._transfer = this._transfer.bind(this);
     }
 
@@ -67,7 +65,11 @@ export default class SendCoins extends TrackerReact(PureComponent) {
     }
 
     _getQrValue(value) {
+        logger.push("QR-value", value);
         this._validateAddress(null, value);
+        if (value && this._validateAmount(value.amount)) {
+            this.setState({amount: parseFloat(value.amount).toString()});
+        }
     }
 
     _validateAddress(event, value) {
@@ -84,7 +86,10 @@ export default class SendCoins extends TrackerReact(PureComponent) {
             this.setState({addressError: enMsg.transactions.invalidAddress})
         } else {
             Meteor.callPromise("get-name-for-address", address)
-                .then((name) => this.setState({recipientName: name || enMsg.transactions.unknownAddress}))
+                .then((name) => this.setState({
+                    recipientName: name || enMsg.transactions.unknownAddress,
+                    addressError: null
+                }))
         }
         this.setState({recipientAddress: address, readQr: false});
     }
@@ -95,43 +100,41 @@ export default class SendCoins extends TrackerReact(PureComponent) {
         return valid;
     }
 
-    _transferEvent(error, result) {
-        console.log(result);
-        if(result && result.args &&
-            result.args.from === currentProfile().address && result.args.to === this.state.recipientAddress){
-            this.listener.stopWatching();
-            this.listener = null;
-            Meteor.call("update-balances", this.state.recipientAddress);
-            this.props.wait.hide();
-        }
-    }
-
     _transfer() {
         let self = this;
-        this.props.wait.show();
+        self.props.wait.show();
 
-        if (!this._validateAmount()) return;
+        Meteor.setTimeout(function () {
+            if (!self._validateAmount()) return;
 
-        let profile = currentProfile();
-        if(this.listener) {
-            this.listener.stopWatching();
-        }
-        let soarAmount = new BigNumber(self.state.amount);
-        /*TODO: limit the events to those containing the sender's address*/
-        eventListener("SoarCoinImplementation", "Transfer", undefined, this._transferEvent)
-            .then(function (transferListener) {
-                self.listener = transferListener;
-                let soarAmount = new BigNumber(self.state.amount);
-                return createRawTx("SoarCoin", "transfer", 0,
-                    self.state.recipientAddress, soarAmount.times(soar).toString(10))
-            })
-            .then(function (tx) {
-                console.log(tx);
-                return signAndSubmit(self.props.password, tx.rawTx);
-            })
-            .then(function (transaction) {
-                console.log("the transaction is", transaction);
-            })
+            let soarAmount = new BigNumber(self.state.amount);
+            createRawTx("SoarCoin", "transfer", 0,
+                self.state.recipientAddress, soarAmount.times(soar).toString(10))
+                .then(function (tx) {
+                    logger.push(tx);
+                    return signAndSubmit(self.props.password, tx.rawTx);
+                })
+                .then(function (transaction) {
+                    return new Promise(function (resolve, reject) {
+                        let txloop = Meteor.setInterval(function () {
+                            const web3 = getWeb3();
+                            let tx = web3.eth.getTransaction(transaction);
+                            if (tx && tx.blockNumber) {
+                                logger.push("transaction", tx);
+                                let receipt = web3.eth.getTransactionReceipt(transaction);
+                                Meteor.clearInterval(txloop);
+                                resolve(receipt);
+                            }
+                        }, 1000)
+                    })
+                })
+                .then(function (receipt) {
+                    Meteor.callPromise("update-balances", self.state.recipientAddress)
+                        .then(function () {
+                            self.props.wait.hide();
+                        });
+                })
+        })
     }
 
     componentDidMount() {

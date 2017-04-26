@@ -145,7 +145,8 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                         };
                         Accounts.createUser(options, (err) => {
                             if (err) {
-                                console.log("user creation error ", err);
+                                logger.push("user creation error " + JSON.stringify(err));
+                                reject(err);
                             } else {
                                 Profiles.insert({
                                     owner: Meteor.userId(),
@@ -153,10 +154,17 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                                     address: '0x' + keystore.username,
                                     salt: keystore.salt,
                                     mnemonicHash: keystore.mnemonicHash,
+                                    soarBalance: 0,
+                                    ethBalance: 0,
                                 }, function (err) {
-                                    Meteor.callPromise("get-tx-ether").then(function () {
-                                        self.props.wait.hide();
-                                    })
+                                    if (err) {
+                                        logger.push(err);
+                                        reject(err);
+                                    } else {
+                                        Meteor.callPromise("send-verification-link").then(function () {
+                                            resolve();
+                                        })
+                                    }
                                 });
                             }
                         })
@@ -173,6 +181,7 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                 ])
                     .then(function () {
                         self.props.wait.hide();
+                        Meteor.subscribe("transactions");
                     })
             })
             .catch((error) => {
@@ -185,47 +194,49 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
     _registrationForm() {
         return (
             <div>
-                <TextField
-                    id="username"
-                    type="email"
-                    value={this.state.username}
-                    hintText={enMsg.login.user}
-                    errorText={this.state.userError}
-                    floatingLabelText={enMsg.login.user}
-                    onChange={this._handleChange}
-                    onBlur={this._validateEmail}
-                    ref={(input) => {
-                        this.userInput = input;
-                    }}
-                />
-                <TextField
-                    id="password"
-                    type="password"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    value={this.state.password}
-                    hintText={enMsg.login.password}
-                    errorText={this.state.passwordError}
-                    floatingLabelText={enMsg.login.password}
-                    onChange={this._handleChange}
-                    onBlur={this._validatePIN}
-                />
-                <TextField
-                    id="password2"
-                    type="password"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    value={this.state.password2}
-                    hintText={enMsg.login.password}
-                    errorText={this.state.passwordError}
-                    floatingLabelText={enMsg.login.password}
-                    onChange={this._handleChange}
-                    onBlur={this._validatePIN}
-                />
-                <Recaptcha
-                    sitekey="6LeJ9xwUAAAAALrnPskDhdVF7NRKE57Me6Ol920k"
-                    verifyCallback={this._reCaptchaVerifyCallback}
-                />
+                <div>
+                    <TextField
+                        id="username"
+                        type="email"
+                        value={this.state.username}
+                        hintText={enMsg.login.user}
+                        errorText={this.state.userError}
+                        floatingLabelText={enMsg.login.user}
+                        onChange={this._handleChange}
+                        onBlur={this._validateEmail}
+                        ref={(input) => {
+                            this.userInput = input;
+                        }}
+                    />
+                </div>
+                <div>
+                    <TextField
+                        id="password"
+                        type="password"
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={this.state.password}
+                        hintText={enMsg.login.password}
+                        errorText={this.state.passwordError}
+                        floatingLabelText={enMsg.login.password}
+                        onChange={this._handleChange}
+                        onBlur={this._validatePIN}
+                    />
+                </div>
+                <div>
+                    <TextField
+                        id="password2"
+                        type="password"
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={this.state.password2}
+                        hintText={enMsg.login.password}
+                        errorText={this.state.passwordError}
+                        floatingLabelText={enMsg.login.password}
+                        onChange={this._handleChange}
+                        onBlur={this._validatePIN}
+                    />
+                </div>
             </div>
         )
     }

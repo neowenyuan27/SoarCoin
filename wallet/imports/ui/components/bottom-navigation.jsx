@@ -33,6 +33,9 @@ export default class WalletBottomNavigation extends React.Component {
             slideIndex: 0,
             contentHeight: "400px"
         };
+
+        this.initialHeight = window.innerHeight;
+
         this.handleChange = this.handleChange.bind(this);
         // this._registerRef = props.registerRef;
     }
@@ -70,7 +73,7 @@ export default class WalletBottomNavigation extends React.Component {
                         <TxHistory hasFocus={this.state.slideIndex === 2} contentHeight={this.state.contentHeight}/>
                     </div>
                 </SwipeableViews>
-                <Tabs style={{position: "absolute", bottom: 8, left: 8, right: 8}}
+                <Tabs style={{position: "absolute", top: (this.initialHeight - 80), left: 8, right: 8}}
                       onChange={this.handleChange}
                       value={this.state.slideIndex}
                       ref={(input) => {

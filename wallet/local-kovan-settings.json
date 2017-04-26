@@ -1,0 +1,23 @@
+{
+  "public": {
+    "password": "123",
+    "username": "micha@roon.me",
+    "recipientAddress": "0x4ba1bcd7ddfbb8257a6a6168eb393e700bbc1e58",
+    "transferAmount": "0.02",
+    "ethNodeAddress": "https://kovan.infura.io/NgjvCOUF5UIhCgRKndzD",
+    "contractEvents": "http://localhost:8545",
+    "recaptcha": {
+      "key": "6LdycR0UAAAAAMfqdi3_KWnwKTrpze_lUmVMgvnD"
+    }
+  },
+  "chain": "kovan",
+  "ethPassword": "abc123",
+  "SoarCoinAddress": "0x240E6067e00ddaE5208Bc48AF90c359bBD94889E",
+  "SoarCoinImplementationAddress": "0x2BBa2c0439bAbBF93a2ffA477F66790e81b8fB69",
+  "MAIL_URL": "smtp://postmaster%40mg.mngn.io:54ddffb3981e16c288ee6aaff70e03fa@smtp.mailgun.org:587",
+  "supportEmail": "support@soarlabs.org",
+  "recaptcha": {
+    "key": "6LdycR0UAAAAAMfqdi3_KWnwKTrpze_lUmVMgvnD",
+    "secret": "6LdycR0UAAAAAHUq4ZZbf7ePKqnsBu3cnMIT7xSQ"
+  }
+}

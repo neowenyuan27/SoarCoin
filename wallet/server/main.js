@@ -125,6 +125,7 @@ Meteor.startup(() => {
     if (txLog) {
         eventBlock = txLog.lastBlock;
     }
+    Globals.upsert({name: "transactionLog"}, {name: "transactionLog", lastBlock: currentBlock})
 
     getContract("SoarCoinImplementation", true)
         .then((contract) => {
@@ -133,7 +134,7 @@ Meteor.startup(() => {
                 event.get(function (error, logs) {
                     logs.forEach(function (log) {
                         transferEventCallback(null, log);
-                    })
+                    });
                 })
             } catch (error) {
                 logger.error(error);
@@ -149,7 +150,7 @@ Meteor.startup(() => {
             Meteor.setInterval(Meteor.bindEnvironment(function () {
                 startListener(transferEventListener).then(
                     (listener) => transferEventListener = listener);
-            }), 10000)
+            }), 60000)
         })
     );
 })

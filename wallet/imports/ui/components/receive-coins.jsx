@@ -2,14 +2,10 @@ import {Meteor} from "meteor/meteor";
 import {EJSON} from "meteor/ejson";
 import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
-import FlatButton from "material-ui/FlatButton";
-import Toggle from "material-ui/Toggle";
 import TextField from "material-ui/TextField";
-import Dialog from "material-ui/Dialog";
 import enMsg from "../i18n/en-labels.json";
 import {QRCode} from "react-qr-svg";
-import {getWeb3} from "../../ethereum/ethereum-services";
-import {currentProfile} from "../../model/profiles"
+import {currentProfile} from "../../model/profiles";
 
 const style = {
     display: "block",
@@ -38,6 +34,10 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
         let change = {};
         change[event.target.id] = value;
         this.setState(change);
+    }
+
+    _selectOnFocus(event) {
+        event.target.select();
     }
 
     componentDidMount() {
@@ -77,6 +77,7 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
                     errorText={this.state.amountError}
                     floatingLabelText={enMsg.appBar.amountIn}
                     onChange={this._handleChange}
+                    onFocus={this._selectOnFocus}
                     ref={(input) => this.amountInput = input}
                 />
                 </form>

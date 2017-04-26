@@ -1,13 +1,13 @@
 import {EJSON} from "meteor/ejson";
 import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
-import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
+import {Table, TableBody, TableRow, TableRowColumn} from "material-ui/Table";
 import TextField from "material-ui/TextField";
-import RaisedButton from 'material-ui/RaisedButton';
-import QrReader from "./qr-reader/qr-reader"
+import RaisedButton from "material-ui/RaisedButton";
+import QrReader from "./qr-reader/qr-reader";
 import enMsg from "../i18n/en-labels.json";
 import {getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
-import {eventListener, createRawTx} from "../../ethereum/ethereum-contracts";
+import {createRawTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";
 
 const styles = {
@@ -52,6 +52,10 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                 result: value,
             })
         }
+    }
+
+    _selectOnFocus(event) {
+        event.target.select();
     }
 
     _handleError(error) {
@@ -167,6 +171,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 errorText={this.state.amountError}
                                 floatingLabelText={enMsg.appBar.amountOut}
                                 onChange={this._handleChange}
+                                onFocus={this._selectOnFocus}
                                 ref={(input) => this.amountInput = input}
                             />
                             <br/>
@@ -186,6 +191,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 errorText={this.state.addressError}
                                 onChange={this._handleChange}
                                 onBlur={this._validateAddress}
+                                onFocus={this._selectOnFocus}
                                 ref={(input) => {
                                     this.userInput = input;
                                 }}

@@ -1,7 +1,7 @@
 import {Meteor} from "meteor/meteor";
 import {EJSON} from "meteor/ejson";
 import CryptoJS from "crypto-js";
-import {add0x, getWeb3, createKeystore} from "../imports/ethereum/ethereum-services";
+import {add0x, createKeystore, getWeb3} from "../imports/ethereum/ethereum-services";
 import {eventListener, getContract} from "../imports/ethereum/ethereum-contracts";
 import {Globals} from "../imports/model/globals";
 import {Transactions} from "../imports/model/transactions";
@@ -150,7 +150,7 @@ Meteor.startup(() => {
             Meteor.setInterval(Meteor.bindEnvironment(function () {
                 startListener(transferEventListener).then(
                     (listener) => transferEventListener = listener);
-            }), 60000)
+            }), 600000)
         })
     );
 })

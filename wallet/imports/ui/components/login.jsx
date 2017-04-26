@@ -1,15 +1,13 @@
 import {Meteor} from "meteor/meteor";
-import {EJSON} from "meteor/ejson";
-import React, {PureComponent} from 'react';
+import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
-import FlatButton from 'material-ui/FlatButton';
-import Recaptcha from 'react-recaptcha';
-import TextField from 'material-ui/TextField';
-import Dialog from 'material-ui/Dialog';
-import enMsg from '../i18n/en-labels.json';
+import FlatButton from "material-ui/FlatButton";
+import TextField from "material-ui/TextField";
+import Dialog from "material-ui/Dialog";
+import enMsg from "../i18n/en-labels.js";
 import CryptoJS from "crypto-js";
 import * as LocalStorage from "meteor/simply:reactive-local-storage";
-import {getKeystore, createKeystore} from "../../ethereum/ethereum-services";
+import {createKeystore, getKeystore} from "../../ethereum/ethereum-services";
 import {Profiles} from "../../model/profiles";
 
 const styles = {

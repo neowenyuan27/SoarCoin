@@ -1,11 +1,9 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import PropTypes from 'prop-types';
-import {Tabs, Tab} from 'material-ui/Tabs';
-import MapsPersonPin from 'material-ui/svg-icons/maps/person-pin';
+import React from "react";
+import ReactDOM from "react-dom";
+import {Tab, Tabs} from "material-ui/Tabs";
 // From https://github.com/oliviertassinari/react-swipeable-views
-import SwipeableViews from 'react-swipeable-views';
-import enMsg from '../i18n/en-labels.json';
+import SwipeableViews from "react-swipeable-views";
+import enMsg from "../i18n/en-labels.js";
 import SendCoinsIcon from "../icons/send-coins";
 import ReceiveCoinsIcon from "../icons/receive-coins";
 import HistoryIcon from "../icons/history";
@@ -47,7 +45,7 @@ export default class WalletBottomNavigation extends React.Component {
     componentDidMount() {
         let tabsNode = ReactDOM.findDOMNode(this.navigationTabs);
         let viewNode = ReactDOM.findDOMNode(this.views);
-        let viewHeight = tabsNode.offsetTop - tabsNode.clientHeight - viewNode.offsetTop - 8;
+        let viewHeight = tabsNode.offsetTop - viewNode.offsetTop - 8;
         this.setState({contentHeight: viewHeight.toString() + "px"})
     }
 

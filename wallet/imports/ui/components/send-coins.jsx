@@ -5,7 +5,7 @@ import {Table, TableBody, TableRow, TableRowColumn} from "material-ui/Table";
 import TextField from "material-ui/TextField";
 import RaisedButton from "material-ui/RaisedButton";
 import QrReader from "./qr-reader/qr-reader";
-import enMsg from "../i18n/en-labels.json";
+import enMsg from "../i18n/en-labels.js";
 import {getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
 import {createRawTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";

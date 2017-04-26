@@ -3,7 +3,7 @@ import {EJSON} from "meteor/ejson";
 import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
 import TextField from "material-ui/TextField";
-import enMsg from "../i18n/en-labels.json";
+import enMsg from "../i18n/en-labels.js";
 import {QRCode} from "react-qr-svg";
 import {currentProfile} from "../../model/profiles";
 

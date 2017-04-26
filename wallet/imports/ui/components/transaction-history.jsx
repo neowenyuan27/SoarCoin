@@ -1,16 +1,14 @@
 import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
 import {Transactions} from "../../model/transactions";
-import MobileTearSheet from '../../../MobileTearSheet';
-import {List, ListItem} from 'material-ui/List';
-import ActionInfo from 'material-ui/svg-icons/action/info';
-import Divider from 'material-ui/Divider';
-import Subheader from 'material-ui/Subheader';
-import Avatar from 'material-ui/Avatar';
-import FileFolder from 'material-ui/svg-icons/file/folder';
-import ActionAssignment from 'material-ui/svg-icons/action/assignment';
-import {blue500, yellow600} from 'material-ui/styles/colors';
-import EditorInsertChart from 'material-ui/svg-icons/editor/insert-chart';
+import {currentProfile} from "../../model/profiles";
+import {soar} from "../../ethereum/ethereum-services";
+import {BigNumber} from "bignumber.js";
+import {List, ListItem} from "material-ui/List";
+import Avatar from "material-ui/Avatar";
+import SendCoinsIcon from "../icons/send-coins";
+import ReceiveCoinsIcon from "../icons/receive-coins";
+import enMsg from "../i18n/en-labels.js";
 
 const styles = {
     title: {
@@ -26,7 +24,11 @@ export default class TxHistory extends TrackerReact(PureComponent) {
             height: props.contentHeight,
         };
 
+        this.avatarIn = <Avatar icon={<ReceiveCoinsIcon />}/>;
+        this.avatarOut = <Avatar icon={<SendCoinsIcon />}/>;
+
         this._handleChange = this._handleChange.bind(this);
+        this._listEntry = this._listEntry.bind(this);
     }
 
     _handleChange(value) {
@@ -37,48 +39,39 @@ export default class TxHistory extends TrackerReact(PureComponent) {
 
     }
 
+    _listEntry(data, myAddress) {
+        const value = new BigNumber(data.value).dividedBy(soar).toFormat(2);
+        if (data.from === myAddress)
+            return <ListItem
+                key={data._id}
+                leftAvatar={this.avatarOut}
+                rightIcon={null}
+                primaryText={enMsg.transactions.to(value, data.toMail || data.to)}
+                secondaryText={data.timestamp.toString()}
+            />
+        else
+            return <ListItem
+                key={data._id}
+                leftAvatar={this.avatarIn}
+                rightIcon={null}
+                primaryText={enMsg.transactions.from(value, data.fromMail || data.from)}
+                secondaryText={data.timestamp.toString()}
+            />
+
+    }
+
     render() {
-        const tableData = Transactions.find().fetch();
+        const self = this;
+        const tableData = Transactions.find({}, {sort: {timestamp: -1}}).fetch();
+        const myAddress = currentProfile().address;
         return (
-            <MobileTearSheet>
+            <div style={{height: this.state.height, overflow: "auto"}}>
                 <List>
-                    <Subheader inset={true}>Folders</Subheader>
-                    <ListItem
-                        leftAvatar={<Avatar icon={<FileFolder />} />}
-                        rightIcon={<ActionInfo />}
-                        primaryText="Photos"
-                        secondaryText="Jan 9, 2014"
-                    />
-                    <ListItem
-                        leftAvatar={<Avatar icon={<FileFolder />} />}
-                        rightIcon={<ActionInfo />}
-                        primaryText="Recipes"
-                        secondaryText="Jan 17, 2014"
-                    />
-                    <ListItem
-                        leftAvatar={<Avatar icon={<FileFolder />} />}
-                        rightIcon={<ActionInfo />}
-                        primaryText="Work"
-                        secondaryText="Jan 28, 2014"
-                    />
+                    {tableData.map((row) => {
+                        return self._listEntry(row, myAddress);
+                    })}
                 </List>
-                <Divider inset={true} />
-                <List>
-                    <Subheader inset={true}>Files</Subheader>
-                    <ListItem
-                        leftAvatar={<Avatar icon={<ActionAssignment />} backgroundColor={blue500} />}
-                        rightIcon={<ActionInfo />}
-                        primaryText="Vacation itinerary"
-                        secondaryText="Jan 20, 2014"
-                    />
-                    <ListItem
-                        leftAvatar={<Avatar icon={<EditorInsertChart />} backgroundColor={yellow600} />}
-                        rightIcon={<ActionInfo />}
-                        primaryText="Kitchen remodel"
-                        secondaryText="Jan 10, 2014"
-                    />
-                </List>
-            </MobileTearSheet>
+            </div>
         )
 
     }

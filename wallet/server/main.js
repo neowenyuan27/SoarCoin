@@ -5,6 +5,7 @@ import {add0x, createKeystore, getWeb3} from "../imports/ethereum/ethereum-servi
 import {eventListener, getContract} from "../imports/ethereum/ethereum-contracts";
 import {Globals} from "../imports/model/globals";
 import {Transactions} from "../imports/model/transactions";
+import {Profiles} from "../imports/model/profiles";
 
 let keystore = null;
 logger = null;
@@ -87,15 +88,19 @@ const transferEventCallback = Meteor.bindEnvironment(function (error, transfer) 
         logger.error(error);
     } else {
         let block = getWeb3().eth.getBlock(transfer.blockNumber);
+        const from = Profiles.findOne({address: transfer.args.from});
+        const to = Profiles.findOne({address: transfer.args.to});
         Transactions.insert({
             from: transfer.args.from,
+            fromMail: from ? from.email : null ,
             to: transfer.args.to,
+            toMail: to ? to.email : null,
             value: transfer.args.value.toString(),
             timestamp: new Date(block.timestamp * 1000),
             blockNumber: transfer.blockNumber,
             logIndex: transfer.logIndex
         }, function (error, res) {
-            //ignore errors
+            // ignore errors
         })
     }
 });

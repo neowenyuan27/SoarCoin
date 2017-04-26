@@ -1,10 +1,10 @@
-import React, {PureComponent} from 'react';
+import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
-import AppBar from 'material-ui/AppBar';
-import IconButton from 'material-ui/IconButton';
-import Menu from 'material-ui/svg-icons/navigation/menu';
-import enMsg from '../i18n/en-labels.json';
-import {currentProfile} from "../../model/profiles"
+import AppBar from "material-ui/AppBar";
+import IconButton from "material-ui/IconButton";
+import Menu from "material-ui/svg-icons/navigation/menu";
+import enMsg from "../i18n/en-labels.js";
+import {currentProfile} from "../../model/profiles";
 
 const styles = {
     title: {

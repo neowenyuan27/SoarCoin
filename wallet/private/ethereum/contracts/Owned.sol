@@ -14,11 +14,14 @@ contract Owned {
         }else{
             NotOwner(msg.sender, _owner);
         }
-
     }
 
     function owner() constant returns(address) {
         return _owner;
+    }
+
+    function transferOwnership(address _newOwner) onlyOwner {
+        _owner = _newOwner;
     }
 
 }

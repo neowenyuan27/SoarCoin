@@ -91,8 +91,6 @@ contract SoarCoinImplementationV10 is Owned, Utils {
         return balance;
     }
 
-
-
     function _transfer(address _from, address _to, uint256 _value) internal returns(bool) {
     // Check send token value > 0;
         if (_value <= 0) return false;

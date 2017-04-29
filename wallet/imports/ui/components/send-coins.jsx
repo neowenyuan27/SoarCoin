@@ -10,6 +10,7 @@ import {ether, getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereu
 import {createRawTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";
 import {currentProfile} from "../../model/profiles";
+import LinearProgress from "material-ui/LinearProgress";
 
 const styles = {
     title: {
@@ -33,6 +34,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
         };
 
         this.minimumBalance = getWeb3().eth.gasPrice.times(Meteor.settings.public.txGas).dividedBy(ether);
+        this.maximumBalance = this.minimumBalance.times(5);
 
         this._toggleQRReader = this._toggleQRReader.bind(this);
         this._handleScan = this._handleScan.bind(this);
@@ -213,7 +215,13 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 style={{width: "100%"}}
                                 disabled={profile.ethBalance.comparedTo(this.minimumBalance) === -1}
                             />
-                            <h1>{profile.formattedEthBalance}</h1>
+                            <div style={{marginTop: "10px"}}>
+                                <LinearProgress
+                                    mode="determinate"
+                                    min={this.minimumBalance.toNumber()}
+                                    max={this.maximumBalance.toNumber()}
+                                    value={profile.ethBalance.toNumber()}/>
+                            </div>
                         </TableRowColumn>
                     </TableRow>
                 </TableBody>

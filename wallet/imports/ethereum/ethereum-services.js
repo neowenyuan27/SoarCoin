@@ -7,6 +7,7 @@ import * as LocalStorage from "meteor/simply:reactive-local-storage";
 import BigNumber from "bignumber.js";
 import {submitRawTx} from "./ethereum-contracts";
 import {Globals} from "../model/globals";
+import {HTTP} from "meteor/http";
 
 export const ether = new BigNumber("1000000000000000000");
 export const soar = new BigNumber("1000000");
@@ -210,7 +211,23 @@ export const isValidAddress = function (address) {
 };
 
 export const getWeiPerSoar = function() {
+    let eth4btc = 0;
+    let soar4btc = 0;
+    let one = new BigNumber(1);
+
     return new Promise(function (resolve, reject) {
-        resolve(250000000)
+        HTTP.get("https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=BTC", function (err, res) {
+            try {
+                eth4btc = new BigNumber(res.data[0].price_btc);
+                HTTP.get("https://api.coinmarketcap.com/v1/ticker/soarcoin/?convert=BTC", function (err, res) {
+                    soar4btc = new BigNumber(res.data[0].price_btc);
+                    console.log(eth4btc.toString(10), soar4btc.toString(10));
+                    resolve(ether.dividedBy(one.dividedBy(soar4btc).times(eth4btc).times(soar)));
+                })
+            } catch (err) {
+                logger.error(err);
+                reject(err);
+            }
+        });
     })
 }

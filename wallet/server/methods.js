@@ -110,7 +110,7 @@ Meteor.methods({
                         oracleAddress,
                         null, //let web3 estimate
                         userAddress,
-                        toTransfer.add(refillGasPrice).dividedBy(weiPerSoar))
+                        toTransfer.add(refillGasPrice).dividedToIntegerBy(weiPerSoar))
                 }))
                 .then(Meteor.bindEnvironment(function (tx) {
                     return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracleAddress)
@@ -145,4 +145,11 @@ Meteor.methods({
         if (profile) return profile.email;
         return null;
     },
+
+    "get-wei-for-soar": function () {
+        let gasPrice = new BigNumber(Meteor.settings.public.txGas).times(getWeb3().eth.gasPrice);
+        let toTransfer = gasPrice.times(10);
+        let refillGasPrice = 0;
+        return getWeiPerSoar().then((weiPerSoar) => toTransfer.add(refillGasPrice).dividedToIntegerBy(weiPerSoar).toString(10));
+    }
 });

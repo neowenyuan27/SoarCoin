@@ -1,4 +1,7 @@
 export default {
+    "general": {
+        "copyAddress": "Copy Address"
+    },
     "appBar": {
         "title": "SOAR",
         "send": "Send SOAR",

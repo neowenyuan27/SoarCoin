@@ -15,6 +15,7 @@
     "meteor-node-stubs": "~0.2.4",
     "prop-types": "^15.5.8",
     "react": "^15.5.4",
+    "react-copy-to-clipboard": "^5.0.0",
     "react-dom": "^15.5.4",
     "react-intl": "^2.2.3",
     "react-qr-svg": "^1.0.3",

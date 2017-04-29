@@ -3,7 +3,7 @@ import {EJSON} from "meteor/ejson";
 import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
 import TextField from "material-ui/TextField";
-import enMsg from "../i18n/en-labels.js";
+import msgs from "../i18n/labels.js";
 import {QRCode} from "react-qr-svg";
 import {currentProfile} from "../../model/profiles";
 import CopyToClipboard from "react-copy-to-clipboard";
@@ -78,9 +78,9 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
                         pattern="[0-9]*"
                         inputMode="numeric"
                         value={this.state.amount}
-                        hintText={enMsg.appBar.amountIn}
+                        hintText={msgs().appBar.amountIn}
                         errorText={this.state.amountError}
-                        floatingLabelText={enMsg.appBar.amountIn}
+                        floatingLabelText={msgs().appBar.amountIn}
                         onChange={this._handleChange}
                         onFocus={this._selectOnFocus}
                         ref={(input) => this.amountInput = input}
@@ -88,7 +88,7 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
                     <CopyToClipboard text={address}
                                      onCopy={this._copyAddress}>
                         <RaisedButton
-                            label={enMsg.general.copyAddress}
+                            label={msgs().general.copyAddress}
                             icon={<ContentCopy />}
                             primary={true}
                         />

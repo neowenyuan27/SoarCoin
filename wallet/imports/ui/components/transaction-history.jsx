@@ -8,7 +8,7 @@ import {List, ListItem} from "material-ui/List";
 import Avatar from "material-ui/Avatar";
 import SendCoinsIcon from "../icons/send-coins";
 import ReceiveCoinsIcon from "../icons/receive-coins";
-import enMsg from "../i18n/en-labels.js";
+import msgs from "../i18n/labels.js";
 
 const styles = {
     title: {
@@ -46,7 +46,7 @@ export default class TxHistory extends TrackerReact(PureComponent) {
                 key={data._id}
                 leftAvatar={this.avatarOut}
                 rightIcon={null}
-                primaryText={enMsg.transactions.to(value, data.toMail || data.to)}
+                primaryText={msgs().transactions.to(value, data.toMail || data.to)}
                 secondaryText={data.timestamp.toString()}
             />
         else
@@ -54,7 +54,7 @@ export default class TxHistory extends TrackerReact(PureComponent) {
                 key={data._id}
                 leftAvatar={this.avatarIn}
                 rightIcon={null}
-                primaryText={enMsg.transactions.from(value, data.fromMail || data.from)}
+                primaryText={msgs().transactions.from(value, data.fromMail || data.from)}
                 secondaryText={data.timestamp.toString()}
             />
 

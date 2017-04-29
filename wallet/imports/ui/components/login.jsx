@@ -4,7 +4,7 @@ import TrackerReact from "meteor/ultimatejs:tracker-react";
 import FlatButton from "material-ui/FlatButton";
 import TextField from "material-ui/TextField";
 import Dialog from "material-ui/Dialog";
-import enMsg from "../i18n/en-labels.js";
+import msgs from "../i18n/labels.js";
 import CryptoJS from "crypto-js";
 import * as LocalStorage from "meteor/simply:reactive-local-storage";
 import {createKeystore, getKeystore} from "../../ethereum/ethereum-services";
@@ -26,8 +26,8 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
         this.accountExists = !(!this.mnemonic);
 
         this.state = {
-            loginButton: this.accountExists ? enMsg.login.login : enMsg.login.register,
-            loginTitle: this.accountExists ? enMsg.login.loginTitle : enMsg.login.registerTitle,
+            loginButton: this.accountExists ? msgs().login.login : msgs().login.register,
+            loginTitle: this.accountExists ? msgs().login.loginTitle : msgs().login.registerTitle,
             username: LocalStorage.getItem("username") || Meteor.settings.public.username,
             email: LocalStorage.getItem("email") || Meteor.settings.public.username,
             password: Meteor.settings.public.password,
@@ -82,7 +82,7 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
         if (re.test(this.state.username)) {
             this.setState({userError: undefined});
         } else {
-            this.setState({userError: enMsg.login.msgs.incorrect});
+            this.setState({userError: msgs().login.msgs.incorrect});
         }
 
         Meteor.setTimeout(this._validateFields)
@@ -91,7 +91,7 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
     _validatePIN() {
         let validPin = this.state.password === this.state.password2 && this.state.password && this.state.password2;
         if (this.state.password && this.state.password2)
-            this.setState({passwordError: validPin ? undefined : enMsg.login.msgs.noMatch});
+            this.setState({passwordError: validPin ? undefined : msgs().login.msgs.noMatch});
         else
             this.setState({passwordError: undefined});
 
@@ -105,8 +105,8 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
     _toggleRegister() {
         this.setState({
             isRegister: !this.state.isRegister,
-            loginButton: this.state.isRegister ? enMsg.login.register : enMsg.login.login,
-            loginTitle: this.state.isRegister ? enMsg.login.registerTitle : enMsg.login.loginTitle,
+            loginButton: this.state.isRegister ? msgs().login.register : msgs().login.login,
+            loginTitle: this.state.isRegister ? msgs().login.registerTitle : msgs().login.loginTitle,
         });
     }
 
@@ -198,9 +198,9 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                         id="username"
                         type="email"
                         value={this.state.username}
-                        hintText={enMsg.login.user}
+                        hintText={msgs().login.user}
                         errorText={this.state.userError}
-                        floatingLabelText={enMsg.login.user}
+                        floatingLabelText={msgs().login.user}
                         onChange={this._handleChange}
                         onBlur={this._validateEmail}
                         ref={(input) => {
@@ -215,9 +215,9 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                         pattern="[0-9]*"
                         inputMode="numeric"
                         value={this.state.password}
-                        hintText={enMsg.login.password}
+                        hintText={msgs().login.password}
                         errorText={this.state.passwordError}
-                        floatingLabelText={enMsg.login.password}
+                        floatingLabelText={msgs().login.password}
                         onChange={this._handleChange}
                         onBlur={this._validatePIN}
                     />
@@ -229,9 +229,9 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                         pattern="[0-9]*"
                         inputMode="numeric"
                         value={this.state.password2}
-                        hintText={enMsg.login.password}
+                        hintText={msgs().login.password}
                         errorText={this.state.passwordError}
-                        floatingLabelText={enMsg.login.password}
+                        floatingLabelText={msgs().login.password}
                         onChange={this._handleChange}
                         onBlur={this._validatePIN}
                     />
@@ -259,7 +259,7 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
     }
 
     _passwordMessage() {
-        this.setState({passwordError: this._checkPassword(this.state.password) ? undefined : enMsg.login.msgs.wrong});
+        this.setState({passwordError: this._checkPassword(this.state.password) ? undefined : msgs().login.msgs.wrong});
         Meteor.setTimeout(this._validateFields)
     }
 
@@ -272,9 +272,9 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                     pattern="[0-9]*"
                     inputMode="numeric"
                     value={this.state.password}
-                    hintText={enMsg.login.password}
+                    hintText={msgs().login.password}
                     errorText={this.state.passwordError}
-                    floatingLabelText={enMsg.login.password}
+                    floatingLabelText={msgs().login.password}
                     onChange={this._passwordChange}
                     onBlur={this._passwordMessage}
                     ref={(input) => {

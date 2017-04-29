@@ -1,9 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import TrackerReact from "meteor/ultimatejs:tracker-react";
 import {Tab, Tabs} from "material-ui/Tabs";
 // From https://github.com/oliviertassinari/react-swipeable-views
 import SwipeableViews from "react-swipeable-views";
-import enMsg from "../i18n/en-labels.js";
+import msgs from "../i18n/labels.js";
 import SendCoinsIcon from "../icons/send-coins";
 import ReceiveCoinsIcon from "../icons/receive-coins";
 import HistoryIcon from "../icons/history";
@@ -23,7 +24,7 @@ const styles = {
     },
 };
 
-export default class WalletBottomNavigation extends React.Component {
+export default class WalletBottomNavigation extends TrackerReact(React.Component) {
 
     constructor(props) {
         super(props);
@@ -78,9 +79,9 @@ export default class WalletBottomNavigation extends React.Component {
                           this.navigationTabs = input;
                       }}
                 >
-                <Tab icon={<SendCoinsIcon/>} label={enMsg.appBar.send} value={0}/>
-                <Tab icon={<ReceiveCoinsIcon/>} label={enMsg.appBar.receive} value={1}/>
-                <Tab icon={<HistoryIcon/>} label={enMsg.appBar.history} value={2}/>
+                    <Tab icon={<SendCoinsIcon/>} label={msgs().appBar.send} value={0}/>
+                    <Tab icon={<ReceiveCoinsIcon/>} label={msgs().appBar.receive} value={1}/>
+                    <Tab icon={<HistoryIcon/>} label={msgs().appBar.history} value={2}/>
             </Tabs>
             </div >
         );

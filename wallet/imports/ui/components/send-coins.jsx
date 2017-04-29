@@ -5,7 +5,7 @@ import {Table, TableBody, TableRow, TableRowColumn} from "material-ui/Table";
 import TextField from "material-ui/TextField";
 import RaisedButton from "material-ui/RaisedButton";
 import QrReader from "./qr-reader/qr-reader";
-import enMsg from "../i18n/en-labels.js";
+import msgs from "../i18n/labels.js";
 import {ether, getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
 import {createRawTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";
@@ -92,11 +92,11 @@ export default class SendCoins extends TrackerReact(PureComponent) {
         }
 
         if (!isValidAddress(address)) {
-            this.setState({addressError: enMsg.transactions.invalidAddress})
+            this.setState({addressError: msgs().transactions.invalidAddress})
         } else {
             Meteor.callPromise("get-name-for-address", address)
                 .then((name) => this.setState({
-                    recipientName: name || enMsg.transactions.unknownAddress,
+                    recipientName: name || msgs().transactions.unknownAddress,
                     addressError: null
                 }))
         }
@@ -105,7 +105,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
 
     _validateAmount() {
         var valid = (this.state.amount.toString().match(/^-?\d*(\.\d+)?$/));
-        this.setState({amountError: valid ? undefined : enMsg.transactions.amountError});
+        this.setState({amountError: valid ? undefined : msgs().transactions.amountError});
         return valid;
     }
 
@@ -164,19 +164,19 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                     <TableRow style={{verticalAlign: "top", borderBottom: "0px"}}>
                         <TableRowColumn style={{textAlign: "left", paddingLeft: 0, paddingRight: 0, width: 128}}>
                             <img onTouchTap={this._toggleQRReader}
-                                 src="/icons/png-512/camera.png"
+                                 src="/img/qr-camera.png"
                                  style={{height: 128, width: 128}}/>
                         </TableRowColumn>
-                        <TableRowColumn style={{textAlign: "left", paddingLeft: 0, paddingRight: 0}}>
+                        <TableRowColumn style={{textAlign: "left", paddingLeft: 16, paddingRight: 0}}>
                             <TextField
                                 id="amount"
                                 type="number"
                                 pattern="[0-9]*"
                                 inputMode="numeric"
                                 value={this.state.amount}
-                                hintText={enMsg.appBar.amountOut}
+                                hintText={msgs().appBar.amountOut}
                                 errorText={this.state.amountError}
-                                floatingLabelText={enMsg.appBar.amountOut}
+                                floatingLabelText={msgs().appBar.amountOut}
                                 onChange={this._handleChange}
                                 onFocus={this._selectOnFocus}
                                 ref={(input) => this.amountInput = input}
@@ -193,8 +193,8 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 id="recipientAddress"
                                 type="text"
                                 value={this.state.recipientAddress}
-                                hintText={enMsg.transactions.address}
-                                floatingLabelText={enMsg.transactions.address}
+                                hintText={msgs().transactions.address}
+                                floatingLabelText={msgs().transactions.address}
                                 errorText={this.state.addressError}
                                 onChange={this._handleChange}
                                 onBlur={this._validateAddress}
@@ -210,7 +210,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                         <TableRowColumn colSpan="2" style={{paddingTop: 60}}>
                             <RaisedButton
                                 onTouchTap={this._transfer}
-                                label={enMsg.appBar.send}
+                                label={msgs().appBar.send}
                                 primary={true}
                                 style={{width: "100%"}}
                                 disabled={profile.ethBalance.comparedTo(this.minimumBalance) === -1}

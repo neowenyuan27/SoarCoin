@@ -1,8 +1,7 @@
-import React from 'react';
-import {render} from 'react-dom';
+import React from "react";
+import {render} from "react-dom";
 import {renderRoutes} from "./router";
-import injectTapEventPlugin from 'react-tap-event-plugin';
-import Main from '../imports/ui/Main'; // Our custom react component
+import injectTapEventPlugin from "react-tap-event-plugin";
 
 logger = 0;
 
@@ -14,6 +13,12 @@ injectTapEventPlugin();
 // For more details see: https://facebook.github.io/react/docs/top-level-api.html#react.render
 Meteor.startup(() => {
     logger = _LTracker;
+    logger.info = logger.push;
+    logger.debug = logger.push;
+    logger.error = logger.push;
+
+    Session.set("language", navigator.language.substr(0, 2));
+
     render(
         renderRoutes(),
         document.getElementById('app')

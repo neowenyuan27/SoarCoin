@@ -1,8 +1,8 @@
 import {Meteor} from "meteor/meteor";
 import {EJSON} from "meteor/ejson";
 import CryptoJS from "crypto-js";
-import {add0x, createKeystore, getWeb3, signAndSubmit} from "../imports/ethereum/ethereum-services";
-import {createRawTx, eventListener, getContract} from "../imports/ethereum/ethereum-contracts";
+import {add0x, createKeystore, getWeb3} from "../imports/ethereum/ethereum-services";
+import {eventListener, getContract} from "../imports/ethereum/ethereum-contracts";
 import {Globals} from "../imports/model/globals";
 import {Transactions} from "../imports/model/transactions";
 import {Profiles} from "../imports/model/profiles";
@@ -74,12 +74,6 @@ Meteor.startup(() => {
                 })
         } else {
             return null; //just return to go to the next step
-        }
-    }).then(function () {
-        //for test and development an address will be primed with tokens
-        if(Meteor.settings.fundAddress) {
-            createRawTx("SoarCoin", "transfer", 0, null, Meteor.settings.fundAddress, 5000000000)
-                .then((tx) => signAndSubmit(Meteor.settings.ethPassword, tx.rawTx))
         }
     }).catch(function (err) {
         winston.error(err);

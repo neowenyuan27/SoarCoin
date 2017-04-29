@@ -122,19 +122,25 @@ export const createRawValueTx = function (recipient, value, from) {
     })
 };
 
-export const createRawTx = function (contractName, funcName, value, from) {
+export const createRawTx = function (contractName, funcName, value, from, providedEstimate) {
     let web3 = getWeb3();
     let gasPrice = web3.toHex(web3.eth.gasPrice);
     let address = from || currentProfile().address;
 
     return getContract(contractName).then((contract) => {
-        let args = Array.from(arguments).slice(4);
+        let args = Array.from(arguments).slice(5);
         let payloadData = contract[funcName].getData.apply(this, args);
-        let gasEstimate = web3.toHex(web3.eth.estimateGas({
-                to: contract.address,
-                value: web3.toHex(value),
-                data: payloadData
-            }) * 5);
+        let gasEstimate;
+        /*if the gas estimate has been provided, do not compute it as the estimation from web3 is way off*/
+        if(providedEstimate) {
+            gasEstimate = web3.toHex(providedEstimate);
+        } else {
+            gasEstimate = web3.toHex(web3.eth.estimateGas({
+                    to: contract.address,
+                    value: web3.toHex(value),
+                    data: payloadData
+                }) * 1.5);
+        }
 
         let nonce = getNonce(address);
         console.log("the nonce is", nonce, "gas estimate", gasEstimate / 5);

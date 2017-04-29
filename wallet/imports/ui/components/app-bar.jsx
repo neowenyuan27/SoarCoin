@@ -8,7 +8,7 @@ import Menu from "material-ui/svg-icons/navigation/menu";
 import enMsg from "../i18n/en-labels.js";
 import {currentProfile, Profiles} from "../../model/profiles";
 import {Transactions} from "../../model/transactions";
-import {getWeb3, soar} from "../../ethereum/ethereum-services";
+import {ether, getWeb3, soar} from "../../ethereum/ethereum-services";
 import BigNumber from "bignumber.js";
 
 const styles = {
@@ -33,7 +33,7 @@ export default class WalletAppBar extends TrackerReact(PureComponent) {
         let self = this;
         Transactions.find({timestamp: {$gt: now}}).observe({
             added: function (transfer) {
-                if(transfer.to = profile.address){
+                if(transfer.to === profile.address){
                     const value = new BigNumber(transfer.value).dividedBy(soar).toFormat(2);
                     self.setState({
                         toastOpen: true,
@@ -47,7 +47,7 @@ export default class WalletAppBar extends TrackerReact(PureComponent) {
         Tracker.autorun(function () {
             if(Meteor.user()){
                 const checkEthBalance = function () {
-                    let ethBalance = new BigNumber(currentProfile().ethBalance);
+                    let ethBalance = currentProfile().ethBalance.times(ether);
                     let gasPrice = new BigNumber(Meteor.settings.public.txGas).times(getWeb3().eth.gasPrice);
                     /**if there is not enough gas to create two transactions*/
                     if (ethBalance.dividedBy(gasPrice).comparedTo(2) === -1) {

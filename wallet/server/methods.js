@@ -92,8 +92,10 @@ Meteor.methods({
         let profile = currentProfile();
         let txCount = Meteor.settings.refillTxCount;
         let gasPrice = new BigNumber(Meteor.settings.public.txGas).times(getWeb3().eth.gasPrice);
+        let refillGasPrice = new BigNumber(Meteor.settings.refillGas).times(getWeb3().eth.gasPrice);
         let toTransfer = gasPrice.times(txCount).minus(getWeb3().eth.getBalance(profile.address));
         let oracleAddress = Globals.findOne({name: "keystore"}).address;
+        let userAddress = currentProfile().address;
 
         console.log("refill started for " + this.userId);
         refills[this.userId] = true;
@@ -106,8 +108,9 @@ Meteor.methods({
                     return createRawTx("SoarCoinImplementation", "ethForToken",
                         toTransfer.toString(10),
                         oracleAddress,
-                        currentProfile().address,
-                        toTransfer.dividedBy(weiPerSoar))
+                        null, //let web3 estimate
+                        userAddress,
+                        toTransfer.add(refillGasPrice).dividedBy(weiPerSoar))
                 }))
                 .then(Meteor.bindEnvironment(function (tx) {
                     return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracleAddress)
@@ -118,11 +121,12 @@ Meteor.methods({
                 }))
                 .then((receipt) => {
                     refills[self.userId] = false;
+                    syncBalance(userAddress);
                     console.log("refill done", receipt);
                     return receipt;
                 })
                 .catch(Meteor.bindEnvironment(function (error) {
-                    console.log(error)
+                    console.log(err)
                     throw new Meteor.Error("refill-ether", err.message);
                 }))
         } else {

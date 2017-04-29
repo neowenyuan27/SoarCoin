@@ -115,7 +115,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
             if (!self._validateAmount()) return;
 
             let soarAmount = new BigNumber(self.state.amount);
-            createRawTx("SoarCoin", "transfer", 0, null,
+            createRawTx("SoarCoin", "transfer", 0, null, Meteor.settings.public.txGas,
                 self.state.recipientAddress, soarAmount.times(soar).toString(10))
                 .then(function (tx) {
                     logger.push(tx);
@@ -213,6 +213,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 style={{width: "100%"}}
                                 disabled={profile.ethBalance.comparedTo(this.minimumBalance) === -1}
                             />
+                            <h1>{profile.formattedEthBalance}</h1>
                         </TableRowColumn>
                     </TableRow>
                 </TableBody>

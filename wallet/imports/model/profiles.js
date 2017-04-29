@@ -15,7 +15,7 @@ export const Profiles = new Mongo.Collection('profiles',
             else
                 profile.soarBalance = new BigNumber(0);
 
-            profile.formattedEthBalance = profile.ethBalance.round(2).toFormat(2);
+            profile.formattedEthBalance = profile.ethBalance.times(1000).toFormat(4);
             profile.formattedSoarBalance = profile.soarBalance.round(2).toFormat(2);
             return profile;
         }

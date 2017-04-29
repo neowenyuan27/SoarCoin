@@ -1,7 +1,7 @@
 import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
-import Dialog from 'material-ui/Dialog';
-import FlatButton from 'material-ui/FlatButton';
+import Dialog from "material-ui/Dialog";
+import FlatButton from "material-ui/FlatButton";
 
 export default class PleaseConfirm extends TrackerReact(PureComponent) {
     constructor(props, context) {
@@ -18,7 +18,9 @@ export default class PleaseConfirm extends TrackerReact(PureComponent) {
         if(user) {
             email = user.emails[0];
             showDialog = !email.verified;
+            if (email.verified) return null;
         }
+
         return (
             <Dialog
                 open={showDialog}

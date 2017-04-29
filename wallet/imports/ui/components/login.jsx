@@ -305,6 +305,8 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
 
     render() {
         const showDialog = !Meteor.userId();
+        if (!showDialog) return null;
+
         let form = undefined;
         if (this.accountExists) {
             form = this._loginForm();

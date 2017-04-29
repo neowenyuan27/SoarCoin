@@ -5,8 +5,11 @@
     "recipientAddress": "0xce0d46d924cc8437c806721496599fc3ffa268b9",
     "transferAmount": "0.02",
     "ethNodeAddress": "http://localhost:8585",
-    "contractEvents": "http://localhost:8585"
+    "contractEvents": "http://localhost:8585",
+    "txGas": 40000
   },
+  "refillTxCount": 10,
   "chain": "develop",
-  "ethPassword": "abc123"
+  "ethPassword": "abc123",
+  "fundAddress": "0x906b1a95de096675a8866d5ab06f433764ace1dc"
 }

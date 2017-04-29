@@ -6,6 +6,7 @@ import W3 from "web3";
 import * as LocalStorage from "meteor/simply:reactive-local-storage";
 import BigNumber from "bignumber.js";
 import {submitRawTx} from "./ethereum-contracts";
+import {Globals} from "../model/globals";
 
 export const ether = new BigNumber("1000000000000000000");
 export const soar = new BigNumber("1000000");
@@ -42,7 +43,9 @@ export const getWeb3 = (event) => {
     return w3;
 };
 
-export const signAndSubmit = (password, rawTx) => {
+export const signAndSubmit = (password, rawTx, from) => {
+    let address = from || add0x(Meteor.user().username);
+
     return new Promise((resolve, reject) => {
         getKeystore(password).then(function (wallet) {
             wallet.keyFromPassword(password, (err, pwDerivedKey) => {
@@ -50,7 +53,7 @@ export const signAndSubmit = (password, rawTx) => {
                     reject(err);
                     return;
                 }
-                let signedTxString = signing.signTx(wallet, pwDerivedKey, add0x(rawTx), add0x(Meteor.user().username));
+                let signedTxString = signing.signTx(wallet, pwDerivedKey, add0x(rawTx), address);
                 console.log("signedTxString", signedTxString);
                 submitRawTx(add0x(signedTxString.toString('hex')))
                     .then((result) => {
@@ -206,3 +209,8 @@ export const isValidAddress = function (address) {
     return false;
 };
 
+export const getWeiPerSoar = function() {
+    return new Promise(function (resolve, reject) {
+        resolve(250000000)
+    })
+}

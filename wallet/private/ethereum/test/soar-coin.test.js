@@ -12,6 +12,7 @@ contract("SoarCoin", function (accounts) {
      */
     before(function (done) {
         SoarCoin.deployed().then(function (soarCoin) {
+            console.log("accounts", accounts);
             console.log("SoarCoin", soarCoin.address);
             token = soarCoin;
             return SoarCoinImplementationV01.deployed()
@@ -284,6 +285,32 @@ contract("SoarCoin", function (accounts) {
         })
             .then((tx) => tokenImpl.owner())
             .then((owner) => assert.equal(owner, accounts[3], "the new owner is " + accounts[3]));
+    })
+
+    it("sends tokens for ether to oracle", function () {
+        let oracleEthBalance = web3.eth.getBalance(accounts[1]);
+        let usereEthBalance = web3.eth.getBalance(accounts[2]);
+        let oracleTokenBalance = null;
+        let userTokenBalance = null;
+        return token.balanceOf(accounts[2])
+            .then((balance) => userTokenBalance = balance)
+            .then(() => tokenImpl.oracle())
+            .then((oracle) => assert.equal(oracle, accounts[1], "the oracle is accounts[1"))
+            .then(() => token.balanceOf(accounts[1]))
+            .then((balance) => oracleTokenBalance = balance)
+            .then(() => {
+                assert.equal(userTokenBalance.comparedTo(250000000000000), 0, "the user has 250000000000000 tokens " + userTokenBalance.toString(10));
+                assert.equal(oracleTokenBalance.comparedTo(0), 0, "the oracle has no tokens");
+            })
+            .then(() => tokenImpl.ethForToken(accounts[2], 50000000, {value: "1000000000000000", from: accounts[1]}))
+            .then(() => token.balanceOf(accounts[2]))
+            .then((balance) => userTokenBalance = balance)
+            .then(() => token.balanceOf(accounts[1]))
+            .then((balance) => oracleTokenBalance = balance)
+            .then(() => {
+                assert.equal(userTokenBalance.add(50000000).comparedTo(250000000000000), 0, "the user has 250000000000000 - 50000000 tokens " + userTokenBalance.toString(10));
+                assert.equal(oracleTokenBalance.comparedTo(50000000), 0, "the oracle has 50000000 tokens");
+            })
     })
 
 });

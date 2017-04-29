@@ -43,6 +43,19 @@ module.exports = function (callback) {
         .then(function () {
             return tokenImpl.setTrustedContract(token.address);
         })
+        .then(function () {
+            return tokenImpl.setOracle("0xf42756721dda2c66ef4ff38c93c87002b6fde88f");
+        })
+        .then(function () {
+            return web3.eth.sendTransaction({
+                from: accounts[4],
+                to: "0xf42756721dda2c66ef4ff38c93c87002b6fde88f",
+                value: 50000000000000000000
+            });
+        })
+        .then(function () {
+            return token.transfer("0x906b1a95de096675a8866d5ab06f433764ace1dc", 500000000000);
+        })
         .then(function (tx) {
             prevImpl.totalSupply().then((ts) => console.log("total supply v01", ts.toString(10)));
             tokenImpl.totalSupply().then((ts) => console.log("total supply v02", ts.toString(10)));
@@ -51,6 +64,7 @@ module.exports = function (callback) {
             return token.transfer(accounts[3], 500000000000);
         })
         .then((tx) => {
+            console.log(tx);
             return Promise.all([
                 token.balanceOf(accounts[0]),
                 token.balanceOf(accounts[3]),

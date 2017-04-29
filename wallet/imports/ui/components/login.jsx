@@ -127,6 +127,7 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                             if (err)
                                 reject(err);
                             else {
+
                                 resolve();
                             }
                         });

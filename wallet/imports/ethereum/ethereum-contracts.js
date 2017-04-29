@@ -1,8 +1,7 @@
 import {Meteor} from "meteor/meteor";
 import {Promise} from "meteor/promise";
-import {getWeb3, add0x, ether, soar} from "./ethereum-services";
+import {add0x, ether, getWeb3} from "./ethereum-services";
 import {Mongo} from "meteor/mongo";
-import {EJSON} from "meteor/ejson";
 import {Globals} from "../model/globals";
 import {currentProfile} from "../model/profiles";
 import {txutils} from "eth-lightwallet";
@@ -82,26 +81,26 @@ export const eventListener = function (contractName, eventName, filter, callback
         })
 };
 
-const getNonce = function (profile) {
+const getNonce = function (address) {
     let web3 = getWeb3();
     /*the nonce is the count of the next transaction*/
-    let nonce = web3.eth.getTransactionCount(profile.address, "pending");
+    let nonce = web3.eth.getTransactionCount(address, "pending");
     console.log("transactions including pending", nonce);
     return nonce;
 };
 
-export const createRawValueTx = function (recipient, value) {
+export const createRawValueTx = function (recipient, value, from) {
     return new Promise((resolve, reject) => {
         let web3 = getWeb3();
         let gasPrice = web3.toHex(web3.eth.gasPrice);
-        let profile = currentProfile();
+        let address = from || currentProfile().address;
 
         let gasEstimate = web3.toHex(web3.eth.estimateGas({
             to: recipient,
             value: web3.toHex(value),
         }));
 
-        let nonce = getNonce(profile);
+        let nonce = getNonce(address);
         console.log("the nonce is", nonce);
 
         var rawTx = {
@@ -109,7 +108,7 @@ export const createRawValueTx = function (recipient, value) {
             gasPrice: gasPrice,
             gasLimit: gasEstimate,
             to: recipient,
-            from: profile.address,
+            from: address,
             value: web3.toHex(value),
         };
 
@@ -118,18 +117,18 @@ export const createRawValueTx = function (recipient, value) {
         resolve({
             rawTx: rawTxString,
             transactionCost: new BigNumber(gasEstimate.toString()).times(gasPrice).dividedBy(ether).toNumber(),
-            accountBalance: web3.eth.getBalance(profile.address).dividedBy(ether).toNumber(),
+            accountBalance: web3.eth.getBalance(address).dividedBy(ether).toNumber(),
         });
     })
 };
 
-export const createRawTx = function (contractName, funcName, value) {
+export const createRawTx = function (contractName, funcName, value, from) {
     let web3 = getWeb3();
     let gasPrice = web3.toHex(web3.eth.gasPrice);
-    let profile = currentProfile();
+    let address = from || currentProfile().address;
 
     return getContract(contractName).then((contract) => {
-        let args = Array.from(arguments).slice(3);
+        let args = Array.from(arguments).slice(4);
         let payloadData = contract[funcName].getData.apply(this, args);
         let gasEstimate = web3.toHex(web3.eth.estimateGas({
                 to: contract.address,
@@ -137,7 +136,7 @@ export const createRawTx = function (contractName, funcName, value) {
                 data: payloadData
             }) * 5);
 
-        let nonce = getNonce(profile);
+        let nonce = getNonce(address);
         console.log("the nonce is", nonce, "gas estimate", gasEstimate / 5);
 
         var rawTx = {
@@ -145,7 +144,7 @@ export const createRawTx = function (contractName, funcName, value) {
             gasPrice: gasPrice,
             gasLimit: gasEstimate,
             to: contract.address,
-            from: profile.address,
+            from: address,
             value: web3.toHex(value),
             data: payloadData,
         };
@@ -155,7 +154,7 @@ export const createRawTx = function (contractName, funcName, value) {
         return {
             rawTx: rawTxString,
             transactionCost: new BigNumber(gasEstimate.toString()).times(gasPrice).dividedBy(ether).toNumber(),
-            accountBalance: web3.eth.getBalance(profile.address).dividedBy(ether).toNumber(),
+            accountBalance: web3.eth.getBalance(address).dividedBy(ether).toNumber(),
         };
     }).catch((err) => {
         throw new Meteor.Error("create function call for contract", err.message);
@@ -197,8 +196,6 @@ export const waitForTxMining = function (txHash) {
                     const web3 = getWeb3();
                     let tx = web3.eth.getTransaction(txHash);
                     if (tx && tx.blockNumber) {
-                        console.log("transaction", tx);
-                        console.log("receipt", web3.eth.getTransactionReceipt(txHash));
                         Meteor.clearInterval(txloop);
                         resolve(web3.eth.getTransactionReceipt(txHash));
                     }

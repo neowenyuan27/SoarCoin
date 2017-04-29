@@ -1,22 +1,22 @@
 import {Mongo} from "meteor/mongo";
 import BigNumber from "bignumber.js";
-import {soar, ether} from "../ethereum/ethereum-services";
+import {ether, soar} from "../ethereum/ethereum-services";
 
 export const Profiles = new Mongo.Collection('profiles',
     {
         transform: (profile) => {
-            if (profile.ethBalance && typeof profile.ethBalance == 'string')
-                profile.ethBalance = new BigNumber(profile.ethBalance.toString(), 16).dividedBy(ether);
+            if (profile.ethBalance)
+                profile.ethBalance = new BigNumber(profile.ethBalance.toString(10)).dividedBy(ether);
             else
                 profile.ethBalance = new BigNumber(0);
 
             if (profile.soarBalance)
-                profile.soarBalance = new BigNumber(profile.soarBalance.toString()).dividedBy(soar);
+                profile.soarBalance = new BigNumber(profile.soarBalance.toString(10)).dividedBy(soar);
             else
                 profile.soarBalance = new BigNumber(0);
 
-            profile.formattedEthBalance = profile.ethBalance.round(2, 1).toFormat(2);
-            profile.formattedSoarBalance = profile.soarBalance.round(2, 1).toFormat(2);
+            profile.formattedEthBalance = profile.ethBalance.round(2).toFormat(2);
+            profile.formattedSoarBalance = profile.soarBalance.round(2).toFormat(2);
             return profile;
         }
     });
@@ -55,6 +55,7 @@ export const currentProfile = function () {
             alias: "not logged in",
             balance: new BigNumber(0),
             soarBalance: new BigNumber(0),
+            ethBalance: new BigNumber(0),
             address: "0x0",
         };
 };

@@ -1,8 +1,8 @@
 import {Meteor} from "meteor/meteor";
 import {EJSON} from "meteor/ejson";
 import CryptoJS from "crypto-js";
-import {add0x, createKeystore, getWeb3} from "../imports/ethereum/ethereum-services";
-import {eventListener, getContract} from "../imports/ethereum/ethereum-contracts";
+import {add0x, createKeystore, getWeb3, signAndSubmit} from "../imports/ethereum/ethereum-services";
+import {createRawTx, eventListener, getContract} from "../imports/ethereum/ethereum-contracts";
 import {Globals} from "../imports/model/globals";
 import {Transactions} from "../imports/model/transactions";
 import {Profiles} from "../imports/model/profiles";
@@ -32,7 +32,7 @@ Meteor.startup(() => {
             } else {
                 resolve(EJSON.parse(json));
             }
-        });
+        }) ;
     }).then(function (json) {
         contracts.SoarCoin = {
             abi: json.abi,
@@ -40,7 +40,7 @@ Meteor.startup(() => {
         }
 
         return new Promise(function (resolve, reject) {
-            Assets.getText("ethereum/build/contracts/SoarCoinImplementationV01.json", function (err, json) {
+            Assets.getText("ethereum/build/contracts/SoarCoinImplementationV02.json", function (err, json) {
                 if (err) {
                     reject(err);
                 } else {
@@ -76,7 +76,11 @@ Meteor.startup(() => {
             return null; //just return to go to the next step
         }
     }).then(function () {
-
+        //for test and development an address will be primed with tokens
+        if(Meteor.settings.fundAddress) {
+            createRawTx("SoarCoin", "transfer", 0, null, Meteor.settings.fundAddress, 5000000000)
+                .then((tx) => signAndSubmit(Meteor.settings.ethPassword, tx.rawTx))
+        }
     }).catch(function (err) {
         winston.error(err);
     })
@@ -90,6 +94,8 @@ const transferEventCallback = Meteor.bindEnvironment(function (error, transfer) 
         let block = getWeb3().eth.getBlock(transfer.blockNumber);
         const from = Profiles.findOne({address: transfer.args.from});
         const to = Profiles.findOne({address: transfer.args.to});
+        const receipt = getWeb3().eth.getTransactionReceipt(transfer.transactionHash);
+
         Transactions.insert({
             from: transfer.args.from,
             fromMail: from ? from.email : null ,
@@ -98,14 +104,23 @@ const transferEventCallback = Meteor.bindEnvironment(function (error, transfer) 
             value: transfer.args.value.toString(),
             timestamp: new Date(block.timestamp * 1000),
             blockNumber: transfer.blockNumber,
-            logIndex: transfer.logIndex
+            logIndex: transfer.logIndex,
+            gasUsed: receipt.cumulativeGasUsed,
+            gasPrice: transfer.args.gasPrice.toString(10),
         }, function (error, res) {
-            // ignore errors
+            /*do NOT log duplicate key errors*/
+            if(error && !error.name === "MongoError" && !error.code === 11000)
+               console.log("inserting transaction", error, res);
         })
     }
 });
 
 function startListener() {
+/*
+    return new Promise((resolve, reject) => {
+        resolve({stopWatching: () => null});
+    });
+*/
     return eventListener("SoarCoinImplementation", "Transfer", null, transferEventCallback);
 }
 
@@ -113,6 +128,7 @@ function startListener() {
 Meteor.startup(() => {
     /**make sure that transactions will be added only once*/
     Transactions._ensureIndex({blockNumber: 1, logIndex: 1}, {unique: true});
+    Transactions._ensureIndex({from: 1, paid: 1}, {unique: false});
 
     /**get all the events for the contract*/
     let txLog = Globals.findOne({name: "transactionLog"});
@@ -155,7 +171,15 @@ Meteor.startup(() => {
 
                         transferEventListener = listener
                     });
-            }), 60000)
+            }), 3600000)
         })
     );
+
+    eventListener("SoarCoinImplementation", "EthForToken", null, function(error, event) {
+        console.log("EthForToken", error, event);
+    });
+
+    eventListener("SoarCoinImplementation", "UnauthorizedCall", null, function(error, event) {
+        console.log("UnauthorizedCall", error, event);
+    });
 })

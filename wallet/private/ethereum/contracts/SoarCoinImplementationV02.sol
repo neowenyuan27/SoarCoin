@@ -5,7 +5,7 @@ import "./SoarCoinImplementationV01.sol";
 
 contract SoarCoinImplementationV02 is Owned {
     address public trustedContract;
-    address oracle;
+    address public oracle;
     SoarCoinImplementationV01 public previousImplementation;
 
     mapping (address => uint256) balances;         // each address in this contract may have tokens.
@@ -32,6 +32,7 @@ contract SoarCoinImplementationV02 is Owned {
         _totalSupply = _previousImplementation.totalSupply();
         trustedContract = _previousImplementation.trustedContract();
         previousImplementation = _previousImplementation;
+        oracle = _oracle;
     }
 
     event Migration(address accountHolder, uint256 value);
@@ -57,19 +58,26 @@ contract SoarCoinImplementationV02 is Owned {
         OracleSet(_oracle, tx.origin);
     }
 
+    function getContractEther() onlyOwner {
+        bool res = msg.sender.send(this.balance);
+    }
+
     event EthForToken(address from, address to, uint256 tokenAmount, uint256 ethAmount);
     /*the oracle can send ETH and request tokens from a participant. there is a cap of 0.1 ETH per transaction*/
     function ethForToken(address _participant, uint256 _amount) payable {
         bool res;
         //the oracle is not a contract, therefor it is safe to use tx.origin and it thwarts reentrancy attacks
-        if(tx.origin != oracle) {
-            res = tx.origin.send(msg.value);
+        if(msg.sender != oracle) {
+            res = msg.sender.send(msg.value);
+            UnauthorizedCall(msg.sender);
             return;
         }
-
+        //first transfer the tokens, then transfer the ETH
         if(transfer(_participant, oracle, _amount)) {
             res = _participant.send(msg.value);
             EthForToken(oracle, _participant, _amount, msg.value);
+        } else {
+            res = oracle.send(msg.value);
         }
     }
 
@@ -89,9 +97,6 @@ contract SoarCoinImplementationV02 is Owned {
         return _decimals;
     }
 
-// This generates a public event on the blockchain that will notify clients
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
 // query balance
     function balanceOf(address _owner) constant returns (uint256 balance) {
         balance = balances[_owner];
@@ -100,7 +105,10 @@ contract SoarCoinImplementationV02 is Owned {
         return balance;
     }
 
-// transfer tokens from one address to another
+    // This generates a public event on the blockchain that will notify clients
+    event Transfer(address indexed from, address indexed to, uint256 value, uint256 gasPrice);
+
+    // transfer tokens from one address to another
     function transfer(address _from, address _to, uint256 _value) contractOnly(msg.sender) returns (bool success) {
         if (_value <= 0) return false;
     // Check send token value > 0;
@@ -112,7 +120,7 @@ contract SoarCoinImplementationV02 is Owned {
     // Subtract from the sender
         balances[_to] += _value;
     // Add the same to the recipient, if it's the contact itself then it signals a sell order of those tokens
-        Transfer(_from, _to, _value);
+        Transfer(_from, _to, _value, tx.gasprice);
     // Notify anyone listening that this transfer took place
         return true;
     }

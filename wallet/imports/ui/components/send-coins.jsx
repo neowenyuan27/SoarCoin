@@ -6,9 +6,10 @@ import TextField from "material-ui/TextField";
 import RaisedButton from "material-ui/RaisedButton";
 import QrReader from "./qr-reader/qr-reader";
 import enMsg from "../i18n/en-labels.js";
-import {getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
+import {ether, getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
 import {createRawTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";
+import {currentProfile} from "../../model/profiles";
 
 const styles = {
     title: {
@@ -30,6 +31,8 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                 width: 150,
             }
         };
+
+        this.minimumBalance = getWeb3().eth.gasPrice.times(Meteor.settings.public.txGas).dividedBy(ether);
 
         this._toggleQRReader = this._toggleQRReader.bind(this);
         this._handleScan = this._handleScan.bind(this);
@@ -112,7 +115,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
             if (!self._validateAmount()) return;
 
             let soarAmount = new BigNumber(self.state.amount);
-            createRawTx("SoarCoin", "transfer", 0,
+            createRawTx("SoarCoin", "transfer", 0, null,
                 self.state.recipientAddress, soarAmount.times(soar).toString(10))
                 .then(function (tx) {
                     logger.push(tx);
@@ -147,6 +150,8 @@ export default class SendCoins extends TrackerReact(PureComponent) {
 
     render() {
         let content = null;
+        const profile = currentProfile();
+
         if (this.state.readQr) {
             content = <div onTouchTap={this._toggleQRReader} style={{marginLeft: -40}}>
                 <QrReader onSuccess={this._getQrValue}/>
@@ -206,6 +211,7 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 label={enMsg.appBar.send}
                                 primary={true}
                                 style={{width: "100%"}}
+                                disabled={profile.ethBalance.comparedTo(this.minimumBalance) === -1}
                             />
                         </TableRowColumn>
                     </TableRow>

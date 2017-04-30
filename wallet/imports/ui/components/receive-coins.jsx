@@ -72,28 +72,31 @@ export default class ReceiveCoins extends TrackerReact(PureComponent) {
                     />
                 </div>
                 <form>
-                    <TextField
-                        id="amount"
-                        type="number"
-                        pattern="[0-9]*"
-                        inputMode="numeric"
-                        value={this.state.amount}
-                        hintText={msgs().appBar.amountIn}
-                        errorText={this.state.amountError}
-                        floatingLabelText={msgs().appBar.amountIn}
-                        onChange={this._handleChange}
-                        onFocus={this._selectOnFocus}
-                        ref={(input) => this.amountInput = input}
-                    />
-                    <CopyToClipboard text={address}
-                                     onCopy={this._copyAddress}>
-                        <RaisedButton
-                            label={msgs().general.copyAddress}
-                            icon={<ContentCopy />}
-                            primary={true}
+                    <div>
+                        <TextField
+                            id="amount"
+                            type="number"
+                            pattern="[0-9]*"
+                            inputMode="numeric"
+                            value={this.state.amount}
+                            hintText={msgs().appBar.amountIn}
+                            errorText={this.state.amountError}
+                            floatingLabelText={msgs().appBar.amountIn}
+                            onChange={this._handleChange}
+                            onFocus={this._selectOnFocus}
+                            ref={(input) => this.amountInput = input}
                         />
-                    </CopyToClipboard>
-
+                    </div>
+                    <div>
+                        <CopyToClipboard text={address}
+                                         onCopy={this._copyAddress}>
+                            <RaisedButton
+                                label={msgs().general.copyAddress}
+                                icon={<ContentCopy />}
+                                primary={true}
+                            />
+                        </CopyToClipboard>
+                    </div>
                 </form>
 
             </div>

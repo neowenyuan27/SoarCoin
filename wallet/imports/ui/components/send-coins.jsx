@@ -7,7 +7,7 @@ import RaisedButton from "material-ui/RaisedButton";
 import QrReader from "./qr-reader/qr-reader";
 import msgs from "../i18n/labels.js";
 import {ether, getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
-import {createRawTx} from "../../ethereum/ethereum-contracts";
+import {callContractMethod, createRawTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";
 import {currentProfile} from "../../model/profiles";
 import LinearProgress from "material-ui/LinearProgress";
@@ -33,7 +33,8 @@ export default class SendCoins extends TrackerReact(PureComponent) {
             }
         };
 
-        this.minimumBalance = getWeb3().eth.gasPrice.times(Meteor.settings.public.txGas).dividedBy(ether);
+        let gasPrice = getWeb3().eth.gasPrice;
+        this.minimumBalance = gasPrice.times(Meteor.settings.public.txGas).dividedBy(ether);
         this.maximumBalance = this.minimumBalance.times(5);
 
         this._toggleQRReader = this._toggleQRReader.bind(this);
@@ -117,8 +118,12 @@ export default class SendCoins extends TrackerReact(PureComponent) {
             if (!self._validateAmount()) return;
 
             let soarAmount = new BigNumber(self.state.amount);
-            createRawTx("SoarCoin", "transfer", 0, null, Meteor.settings.public.txGas,
-                self.state.recipientAddress, soarAmount.times(soar).toString(10))
+            //TODO: test if account has been migrated and set gas amount accordingly
+            callContractMethod("SoarCoinImplementation", "migrated", currentProfile().address)
+                .then((migrated) => migrated ? Meteor.settings.public.txGas : Meteor.settings.public.migrationTxGas)
+                .then((txGas) => createRawTx("SoarCoin", "transfer", 0, null, txGas,
+                    self.state.recipientAddress, soarAmount.times(soar).toString(10)
+                ))
                 .then(function (tx) {
                     logger.push(tx);
                     return signAndSubmit(self.props.password, tx.rawTx);
@@ -153,6 +158,9 @@ export default class SendCoins extends TrackerReact(PureComponent) {
     render() {
         let content = null;
         const profile = currentProfile();
+
+        /*only show this if there is a logged in user*/
+        if (profile.address === "0x0") return null;
 
         if (this.state.readQr) {
             content = <div onTouchTap={this._toggleQRReader} style={{marginLeft: -40}}>

@@ -11,5 +11,8 @@ export const Labels = {
 }
 
 export default msgs = function () {
-    return Labels[Session.get("language") || "en"];
+    let lang = Session.get("language");
+    if (!Labels[lang]) lang = "en";
+
+    return Labels[lang];
 }

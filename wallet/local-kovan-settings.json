@@ -9,7 +9,8 @@
     "recaptcha": {
       "key": "6LdycR0UAAAAAMfqdi3_KWnwKTrpze_lUmVMgvnD"
     },
-    "txGas": 45000
+    "txGas": 45000,
+    "migrationTxGas": 120000
   },
   "refillGas": 50000,
   "refillTxCount": 4,

@@ -9,6 +9,8 @@ module.exports = function (deployer, network) {
     let sci02 = undefined;
     let sc = undefined;
 
+    web3.personal.unlockAccount(web3.eth.accounts[0], "ppp", 3600);
+
     deployer.deploy(SoarCoin);
     deployer.deploy(SoarCoinImplementationV01, 500000000000000);
 
@@ -19,7 +21,8 @@ module.exports = function (deployer, network) {
         return SoarCoinImplementationV01.deployed();
     }).then((_sci01) => {
         sci01 = _sci01;
-        return deployer.deploy(SoarCoinImplementationV02, _sci01.address, web3.eth.accounts[1]);
+        return deployer.deploy(SoarCoinImplementationV02, sc.address, sci01.address,
+            "0xf42756721dda2c66ef4ff38c93c87002b6fde88f");
     }).catch(function (error) {
         console.log(error);
     })

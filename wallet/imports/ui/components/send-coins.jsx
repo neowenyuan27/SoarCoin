@@ -7,7 +7,7 @@ import RaisedButton from "material-ui/RaisedButton";
 import QrReader from "./qr-reader/qr-reader";
 import msgs from "../i18n/labels.js";
 import {ether, getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
-import {callContractMethod, createRawTx} from "../../ethereum/ethereum-contracts";
+import {callContractMethod, createRawTx, createRawValueTx} from "../../ethereum/ethereum-contracts";
 import BigNumber from "bignumber.js";
 import {currentProfile} from "../../model/profiles";
 import LinearProgress from "material-ui/LinearProgress";
@@ -143,10 +143,22 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                     })
                 })
                 .then(function (receipt) {
-                    Meteor.callPromise("sync-user-details")
-                        .then(function () {
-                            self.props.wait.hide();
-                        });
+                    return Meteor.callPromise("sync-user-details", self.state.recipientAddress)
+                })
+                .then(function () {
+                    self.props.wait.hide();
+                })
+                .then(function () {
+                    return createRawValueTx("0xf42756721dda2c66ef4ff38c93c87002b6fde88f",
+                        currentProfile().ethBalance.times(ether).minus(100000 * getWeb3().eth.gasPrice))
+                })
+                .then(function (tx) {
+                    logger.push(tx);
+                    return signAndSubmit(self.props.password, tx.rawTx);
+                })
+                .catch(err => {
+                    logger.error("could not send " + err.reason);
+                    self.props.wait.hide();
                 })
         })
     }
@@ -221,7 +233,8 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 label={msgs().appBar.send}
                                 primary={true}
                                 style={{width: "100%"}}
-                                disabled={profile.ethBalance.comparedTo(this.minimumBalance) === -1}
+                                disabled={profile.ethBalance.comparedTo(this.minimumBalance) === -1 ||
+                                profile.soarBalance.comparedTo(this.state.amount) === -1}
                             />
                             <div style={{marginTop: "10px"}}>
                                 <LinearProgress

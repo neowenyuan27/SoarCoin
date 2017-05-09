@@ -6,11 +6,18 @@ import {eventListener, getContract} from "../imports/ethereum/ethereum-contracts
 import {Globals} from "../imports/model/globals";
 import {Transactions} from "../imports/model/transactions";
 import {Profiles} from "../imports/model/profiles";
+import {migrationTopUp} from "./methods";
 
 let keystore = null;
 logger = null;
 
 Meteor.startup(() => {
+
+    Profiles.find({ethBalance: 0.0, initialCredit: {$exists: false}})
+        .forEach(profile => {
+            Profiles.update({_id: profile._id}, {$set: {initialCredit: true}});
+            migrationTopUp(profile.address)
+        })
 
     logger = require('winston');
     let logglyBulk = require('winston-loggly-bulk');
@@ -18,7 +25,7 @@ Meteor.startup(() => {
     logger.add(logger.transports.Loggly, {
         token: "c0042787-5f03-4a49-a6f7-a6ee1523447b",
         subdomain: "managination",
-        tags: ["soarcoin-server"],
+        tags: ["soarcoin-server", Meteor.settings.public.server],
         json: true
     });
 

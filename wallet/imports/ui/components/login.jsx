@@ -80,7 +80,14 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
         let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         //TODO: add server verification that email is not yet registered
         if (re.test(this.state.username)) {
-            this.setState({userError: undefined});
+            Meteor.callPromise("verify-email", this.state.username)
+                .then(res => {
+                    if (res) {
+                        this.setState({userError: undefined})
+                    } else {
+                        this.setState({userError: msgs().login.msgs.duplicate})
+                    }
+                })
         } else {
             this.setState({userError: msgs().login.msgs.incorrect});
         }
@@ -118,58 +125,67 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
 
         this.loggingIn = true;
 
-        new Promise(function (resolve, reject) {
-            if (self.accountExists) {
-                let mnemonic = CryptoJS.AES.decrypt(self.mnemonic, keystorePassword).toString(CryptoJS.enc.Utf8);
-                getKeystore(keystorePassword)
-                    .then(() => {
-                        Meteor.loginWithPassword(self.state.username, mnemonic, (err) => {
-                            if (err)
-                                reject(err);
-                            else {
+        Meteor.callPromise("verify-email", this.state.username)
+            .then(function (canRegister) {
+                if (self.accountExists) {
+                    let mnemonic = CryptoJS.AES.decrypt(self.mnemonic, keystorePassword).toString(CryptoJS.enc.Utf8);
+                    getKeystore(keystorePassword)
+                        .then(() => {
+                            Meteor.loginWithPassword(self.state.username, mnemonic, (err) => {
+                                if (err)
+                                    throw err;
+                                else {
 
-                                resolve();
-                            }
-                        });
-                    })
-            } else {
-                let email = self.state.username;
-
-                return createKeystore(email, keystorePassword, null, null)
-                    .then((keystore) => {
-                        let options = {
-                            username: keystore.username,
-                            email: email,
-                            password: keystore.password,
-                        };
-                        Accounts.createUser(options, (err) => {
-                            if (err) {
-                                logger.push("user creation error " + JSON.stringify(err));
-                                reject(err);
-                            } else {
-                                Profiles.insert({
-                                    owner: Meteor.userId(),
-                                    email: email,
-                                    address: '0x' + keystore.username,
-                                    salt: keystore.salt,
-                                    mnemonicHash: keystore.mnemonicHash,
-                                    soarBalance: 0,
-                                    ethBalance: 0,
-                                }, function (err) {
-                                    if (err) {
-                                        logger.push(err);
-                                        reject(err);
-                                    } else {
-                                        Meteor.callPromise("send-verification-link").then(function () {
-                                            resolve();
-                                        })
-                                    }
-                                });
-                            }
+                                    Promise.resolve();
+                                }
+                            });
                         })
-                    });
-            }
-        })
+                        .catch(err => {
+                            throw err
+                        })
+                } else if (canRegister) {
+                    let email = self.state.username;
+
+                    return createKeystore(email, keystorePassword, null, null)
+                        .then((keystore) => {
+                            let options = {
+                                username: keystore.username,
+                                email: email,
+                                password: keystore.password,
+                            };
+                            Accounts.createUser(options, (err) => {
+                                if (err) {
+                                    logger.push("user creation error " + JSON.stringify(err));
+                                    throw err;
+                                } else {
+                                    Profiles.insert({
+                                        owner: Meteor.userId(),
+                                        email: email,
+                                        address: '0x' + keystore.username,
+                                        salt: keystore.salt,
+                                        mnemonicHash: keystore.mnemonicHash,
+                                        soarBalance: 0,
+                                        ethBalance: 0,
+                                    }, function (err) {
+                                        if (err) {
+                                            logger.push(err);
+                                            throw err;
+                                        } else {
+                                            Meteor.callPromise("send-verification-link", email).then(function () {
+                                                Promise.resolve();
+                                            })
+                                        }
+                                    });
+                                }
+                            })
+                        })
+                        .catch(err => {
+                            throw err
+                        });
+                } else {
+                    throw new Meteor.Error("e-mail allready registered");
+                }
+            })
             .then(() => {
                 self.loggingIn = false;
                 self.props.setPassword(keystorePassword);
@@ -185,8 +201,9 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
             })
             .catch((error) => {
                 self.loggingIn = false;
-                console.log("keystore creation error ", error);
+                logger.push("keystore creation error ", error);
                 self.props.wait.hide()
+                self.setState({message: error ? error.message : msgs().general.error})
             })
     }
 
@@ -320,6 +337,11 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
             disabled={this.state.invalidFields}
         />
 
+        let message = null;
+        if (this.state.message) {
+            message = <h2 style={{color: "red"}}>{this.state.message.replace("[", "").replace("]", "")}</h2>
+        }
+
         return (
             <Dialog
                 open={showDialog}
@@ -328,6 +350,7 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                 autoScrollBodyContent={true}
             >
                 {form}
+                {message}
             </Dialog>
         )
 

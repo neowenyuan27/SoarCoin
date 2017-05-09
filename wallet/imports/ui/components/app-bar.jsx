@@ -33,11 +33,10 @@ export default class WalletAppBar extends TrackerReact(PureComponent) {
         };
 
         let now = new Date();
-        let profile = currentProfile();
         let self = this;
         Transactions.find({timestamp: {$gt: now}}).observe({
             added: function (transfer) {
-                if (transfer.to === profile.address) {
+                if (transfer.to === currentProfile().address) {
                     const value = new BigNumber(transfer.value).dividedBy(soar).toFormat(2);
                     self.setState({
                         toastOpen: true,
@@ -49,13 +48,21 @@ export default class WalletAppBar extends TrackerReact(PureComponent) {
         })
 
         Tracker.autorun(function () {
-            if (Meteor.user()) {
+            if (currentProfile().address !== "0x0") {
                 const checkEthBalance = function () {
                     let ethBalance = currentProfile().ethBalance.times(ether);
                     let gasPrice = new BigNumber(Meteor.settings.public.txGas).times(getWeb3().eth.gasPrice);
                     /**if there is not enough gas to create two transactions*/
                     if (ethBalance.dividedBy(gasPrice).comparedTo(2) === -1) {
-                        Meteor.call("refill-ether");
+                        Meteor.call("refill-ether", function (err, res) {
+                            if (err) {
+                                logger.info("could not refill", err);
+                                self.setState({
+                                    toastOpen: true,
+                                    toastMessage: err.details
+                                });
+                            }
+                        });
                     }
                 };
                 /**check the ETH balance when the application first renders and then every time the balance changes*/

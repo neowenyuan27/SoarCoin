@@ -30,7 +30,7 @@ export const getContractDefs = function () {
 
 /**the events are used to record all the contract events that happen.
  * it is also used to avoid duplicate event triggering*/
-export const Events = new Mongo.Collection('eth-events');
+export const Events = new Mongo.Collection("eth-events");
 
 if (Meteor.isServer) {
     Meteor.startup(() => {
@@ -39,15 +39,13 @@ if (Meteor.isServer) {
     })
 }
 
-let contracts = {};
 export const getContract = (name, event) => {
     return getContractDefs().then(function (contractDefs) {
-        if (!contracts[name]) try {
-            contracts[name] = getWeb3(event).eth.contract(contractDefs[name].abi).at(contractDefs[name].address);
+        try {
+            return getWeb3(event).eth.contract(contractDefs[name].abi).at(contractDefs[name].address);
         } catch (err) {
-            throw err;
+            return Promise.reject(err);
         }
-        return contracts[name];
     })
 };
 
@@ -66,9 +64,9 @@ export const eventListener = function (contractName, eventName, filter, callback
             try {
                 let event;
                 if (eventName) {
-                    event = contract[eventName](filter, {fromBlock: 'latest', toBlock: 'latest'});
+                    event = contract[eventName](filter, {fromBlock: "latest", toBlock: "latest"});
                 } else {
-                    event = contract.allEvents(filter, {fromBlock: 'latest', toBlock: 'latest'});
+                    event = contract.allEvents(filter, {fromBlock: "latest", toBlock: "latest"});
                 }
                 if (typeof callback === "function")
                     event.watch(callback);
@@ -76,7 +74,7 @@ export const eventListener = function (contractName, eventName, filter, callback
                 return event;
             } catch (error) {
                 logger.error(error);
-                throw new Meteor.Error(error);
+                return Promise.reject(new Meteor.Error(error));
             }
         })
 };
@@ -147,7 +145,7 @@ export const createRawTx = function (contractName, funcName, value, from, provid
 
         var rawTx = {
             nonce: nonce,
-            gasPrice: gasPrice,
+            gasPrice: gasPrice.toString(10),
             gasLimit: gasEstimate,
             to: contract.address,
             from: address,
@@ -163,25 +161,25 @@ export const createRawTx = function (contractName, funcName, value, from, provid
             accountBalance: web3.eth.getBalance(address).dividedBy(ether).toNumber(),
         };
     }).catch((err) => {
-        throw new Meteor.Error("create function call for contract", err.message);
+        return Promise.reject(new Meteor.Error("create function call for contract", err.message));
     });
 
 };
 
 export const submitRawTx = function (rawTxHexString) {
     let txHash = null;
-    if (rawTxHexString.length > 2 && rawTxHexString.slice(0, 2) === '0x') {
-        txHash = getWeb3().sha3(rawTxHexString.substr(2), {encoding: 'hex'});
+    if (rawTxHexString.length > 2 && rawTxHexString.slice(0, 2) === "0x") {
+        txHash = getWeb3().sha3(rawTxHexString.substr(2), {encoding: "hex"});
     } else {
-        txHash = getWeb3().sha3(rawTxHexString, {encoding: 'hex'});
+        txHash = getWeb3().sha3(rawTxHexString, {encoding: "hex"});
     }
     console.log("computed hash is", txHash);
     return new Promise((resolve, reject) => {
         if (!getWeb3().eth.getTransaction(txHash)) {
             getWeb3().eth.sendRawTransaction(add0x(rawTxHexString), function (err, hash) {
-                console.log('transaction hash is', hash);
+                console.log("transaction hash is", hash);
                 if (err) {
-                    reject(new Meteor.Error('web3-error', err.message));
+                    reject(new Meteor.Error("web3-error", err.message));
                 } else {
                     resolve(hash);
                 }
@@ -194,9 +192,9 @@ export const submitRawTx = function (rawTxHexString) {
 }
 
 export const waitForTxMining = function (txHash) {
-    if (txHash && typeof txHash === 'string' && getWeb3().eth.getTransaction(txHash)) {
+    if (txHash && typeof txHash === "string" && getWeb3().eth.getTransaction(txHash)) {
+        logger.info("[wait for tx to mine] " + txHash);
         return new Promise((resolve, reject) => {
-            console.log("pending transactions", getWeb3().eth.pendingTransactions);
             let txloop = Meteor.setInterval(Meteor.bindEnvironment(function () {
                 try {
                     const web3 = getWeb3();
@@ -206,7 +204,7 @@ export const waitForTxMining = function (txHash) {
                         resolve(web3.eth.getTransactionReceipt(txHash));
                     }
                 } catch (err) {
-                    console.log("ERROR: wait for tx to mine", err);
+                    logger.error("[ERROR: wait for tx to mine]" + JSON.stringify(err));
                     Meteor.clearInterval(txloop);
                     reject(new Meteor.Error("wait for TX to mine", err.message));
                 }
@@ -218,11 +216,11 @@ export const waitForTxMining = function (txHash) {
 }
 
 Meteor.methods({
-    'submit-raw-tx': function (rawTxHexString) {
+    "submit-raw-tx": function (rawTxHexString) {
         return submitRawTx(rawTxHexString);
     },
 
-    'wait-for-tx-mining': function (txHash, sender, recipient) {
+    "wait-for-tx-mining": function (txHash, sender, recipient) {
         return waitForTxMining(txHash, sender, recipient);
     },
 

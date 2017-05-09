@@ -26,6 +26,6 @@ Meteor.publish("globals", function () {
 });
 
 Meteor.publish("transactions", function () {
-    let address = add0x(Meteor.users.findOne({_id: this.userId}).username);
+    let address = this.userId ? add0x(Meteor.users.findOne({_id: this.userId}).username) : "not logged in";
     return Transactions.find({$or: [{from: address}, {to: address}]}, {sort: {timestamp: -1}, limit: 100});
 })

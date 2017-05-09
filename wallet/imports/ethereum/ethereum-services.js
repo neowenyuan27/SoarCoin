@@ -38,7 +38,7 @@ export const getWeb3 = (event) => {
             let latestBlock = w3.eth.getBlock(w3.eth.blockNumber);
         } catch (error) {
             logger.error(error);
-            throw new Meteor.Error(error);
+            return Promise.reject(new Meteor.Error(error));
         }
     }
     return w3;

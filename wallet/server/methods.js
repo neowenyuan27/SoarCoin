@@ -1,5 +1,10 @@
-import {getWeb3, getWeiPerSoar, signAndSubmit} from "../imports/ethereum/ethereum-services";
-import {callContractMethod, createRawTx, waitForTxMining} from "../imports/ethereum/ethereum-contracts";
+import {add0x, ether, getWeb3, getWeiPerSoar, signAndSubmit, soar} from "../imports/ethereum/ethereum-services";
+import {
+    callContractMethod,
+    createRawTx,
+    createRawValueTx,
+    waitForTxMining
+} from "../imports/ethereum/ethereum-contracts";
 import {currentProfile, Profiles} from "../imports/model/profiles";
 import {Globals} from "../imports/model/globals";
 import {HTTP} from "meteor/http";
@@ -19,14 +24,37 @@ export const syncBalance = function (address) {
         });
 }
 
+export const migrationTopUp = function (address) {
+    let oracleAddress = Globals.findOne({name: "keystore"}).address;
+    return createRawValueTx(address, "4000000000000000", oracleAddress)
+        .then(Meteor.bindEnvironment(function (tx) {
+            return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracleAddress)
+        }))
+        .then(Meteor.bindEnvironment(function (tx) {
+            console.log("transaction", getWeb3().eth.getTransaction(tx));
+            return waitForTxMining(tx).then()
+        }))
+        .then((receipt) => {
+            refills[self.userId] = false;
+            syncBalance(userAddress);
+            console.log("refill done", receipt);
+            return receipt;
+        })
+        .then(() => syncBalance(address))
+
+}
+
 let refills = {};
 
 Meteor.methods({
-    "send-verification-link": function () {
-        let userId = Meteor.userId();
-        if (userId) {
+    "verify-email": function (email) {
+        return Meteor.users.find({"emails.address": email}).count() === 0;
+    },
+
+    "send-verification-link": function (recipient) {
+        if (this.userId && recipient) {
             let token = Random.id(),
-                emailAddress = Meteor.user().emails[0].address,
+                emailAddress = recipient,
                 urlWithoutHash = `${Meteor.absoluteUrl()}verify-email/${token}`,
                 supportEmail = Meteor.settings.supportEmail,
                 emailBody = `To verify your email address (${emailAddress}) visit the following link:\n\n${urlWithoutHash}\n\n If you did not request this verification, please ignore this email. If you feel something is wrong, please contact our support team: ${supportEmail}.`;
@@ -52,6 +80,8 @@ Meteor.methods({
             } catch (error) {
                 logger.error("token mail NOT sent to " + emailAddress, error);
             }
+        } else {
+            logger.error("user not logged in");
         }
     },
 
@@ -64,7 +94,8 @@ Meteor.methods({
                 }
             })
 
-        if (!captchaResult.data.success || Meteor.users.find({"services.email.verificationTokens.token": token}).count() === 0) {
+        let user = Meteor.users.findOne({"services.email.verificationTokens.token": token});
+        if (!captchaResult.data.success || !user) {
             Meteor.users.update({"services.email.verificationTokens.token": token}, {
                 $set: {"emails.0.captcha": "unverified", "emails.0.verified": false},
                 $unset: {"services.email.verificationTokens": ""}
@@ -75,6 +106,8 @@ Meteor.methods({
                 $set: {"emails.0.captcha": "verified", "emails.0.verified": true},
                 $unset: {"services.email.verificationTokens": ""}
             });
+            Profiles.update({owner: user._id}, {$set: {initialCredit: true}});
+            migrationTopUp(add0x(user.username));
             return true;
         }
     },
@@ -97,26 +130,36 @@ Meteor.methods({
         let oracleAddress = Globals.findOne({name: "keystore"}).address;
         let userAddress = currentProfile().address;
 
-        console.log("refill started for " + this.userId);
+        console.log("refill started for", userAddress, "sending", toTransfer.dividedBy(ether).toString(10));
         refills[this.userId] = true;
 
         /*the test aims to thwart micro transaction atacks*/
         if (toTransfer.comparedTo(gasPrice.times(txCount - 2)) == 1) {
             /*TODO: verify that the account did not spend its ETH on something else than trsansfering SOAR*/
-            getWeiPerSoar()
+            return getWeiPerSoar()
                 .then(Meteor.bindEnvironment(function (weiPerSoar) {
-                    return createRawTx("SoarCoinImplementation", "ethForToken",
-                        toTransfer.toString(10),
-                        oracleAddress,
-                        null, //let web3 estimate
-                        userAddress,
-                        toTransfer.add(refillGasPrice).dividedToIntegerBy(weiPerSoar))
+                    let soarPrice = toTransfer.add(refillGasPrice).dividedToIntegerBy(weiPerSoar);
+                    console.log("soar price for transfer of", toTransfer.toString(10), "=", soarPrice.toString(10));
+                    if (profile.soarBalance.comparedTo(soarPrice.dividedBy(soar)) >= 0) {
+                        return createRawTx("SoarCoinImplementation", "ethForToken",
+                            toTransfer.toString(10),
+                            oracleAddress,
+                            Meteor.settings.refillGas,
+                            userAddress,
+                            soarPrice)
+                    } else {
+                        return Promise.reject(
+                            "refill-ether insufficient SOAR " +
+                            "availalble " + profile.soarBalance.toString(10) + " " +
+                            "required " + soarPrice.dividedBy(soar).toString(10)
+                        );
+                    }
                 }))
                 .then(Meteor.bindEnvironment(function (tx) {
                     return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracleAddress)
                 }))
                 .then(Meteor.bindEnvironment(function (tx) {
-                    console.log(tx);
+                    console.log("transaction", getWeb3().eth.getTransaction(tx));
                     return waitForTxMining(tx).then()
                 }))
                 .then((receipt) => {
@@ -125,19 +168,23 @@ Meteor.methods({
                     console.log("refill done", receipt);
                     return receipt;
                 })
-                .catch(Meteor.bindEnvironment(function (error) {
-                    console.log(err)
-                    throw new Meteor.Error("refill-ether", err.message);
-                }))
+                .catch(function (err) {
+                    console.log(err);
+                    refills[self.userId] = false;
+                    throw new Meteor.Error(500, "no refill", err);
+                })
         } else {
             console.log("no refill necessary", toTransfer.toString(10));
             refills[self.userId] = false;
+            return {refill: false};
         }
 
     },
 
-    "sync-user-details": function () {
+    "sync-user-details": function (recipient) {
         syncBalance(currentProfile().address);
+        if (recipient)
+            syncBalance(recipient);
     },
 
     "get-name-for-address": function (address) {

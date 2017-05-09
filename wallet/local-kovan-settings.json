@@ -1,18 +1,19 @@
 {
   "public": {
+    "server": "local-kovan",
     "password": "123",
     "username": "micha@roon.me",
-    "recipientAddress": "0xd6491846f3ec92a69a4e4858ce8e45bd6af67bd4",
+    "recipientAddress": "0xeb659231f47e036d197ab0c807e49e39155c9c6d",
     "transferAmount": "0.02",
     "ethNodeAddress": "https://kovan.infura.io/NgjvCOUF5UIhCgRKndzD",
     "contractEvents": "http://localhost:8545",
     "recaptcha": {
       "key": "6LdycR0UAAAAAMfqdi3_KWnwKTrpze_lUmVMgvnD"
     },
-    "txGas": 45000,
+    "txGas": 60000,
     "migrationTxGas": 120000
   },
-  "refillGas": 50000,
+  "refillGas": 65000,
   "refillTxCount": 4,
   "chain": "kovan",
   "ethPassword": "abc123",

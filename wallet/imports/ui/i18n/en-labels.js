@@ -1,6 +1,7 @@
 export default {
     general: {
-        copyAddress: "Copy Address"
+        copyAddress: "Copy Address",
+        error: "an error occured"
     },
     appBar: {
         dismiss: "dissmiss",
@@ -44,7 +45,7 @@ export default {
         msgs: {
             wrong: "Incorrect Password",
             noMatch: "the two PINs do not match",
-            duplicate: "this e-mail is already registered, login instead",
+            duplicate: "this e-mail is already registered",
             incorrect: "this e-mail is not valid"
         },
         waiting: "Waiting for e-mail verification"

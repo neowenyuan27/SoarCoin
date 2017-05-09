@@ -2,23 +2,20 @@
  * In this file, we create a React component
  * which incorporates components provided by Material-UI.
  */
-import React, {PureComponent} from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import Dialog from 'material-ui/Dialog';
-import {deepOrange500} from 'material-ui/styles/colors';
-import FlatButton from 'material-ui/FlatButton';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import WalletAppBar from './components/app-bar';
-import WalletBottomNavigation from './components/bottom-navigation';
-import LoginDialog from './components/login';
-import Wait from './components/wait';
+import React, {PureComponent} from "react";
+import {deepOrange500} from "material-ui/styles/colors";
+import getMuiTheme from "material-ui/styles/getMuiTheme";
+import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
+import WalletAppBar from "./components/app-bar";
+import WalletBottomNavigation from "./components/bottom-navigation";
+import LoginDialog from "./components/login";
+import Wait from "./components/wait";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
 import PleaseConfirm from "./components/please-confirm";
 
 const styles = {
     container: {
-        textAlign: 'center',
+        textAlign: "center",
         paddingTop: 200,
     },
 };

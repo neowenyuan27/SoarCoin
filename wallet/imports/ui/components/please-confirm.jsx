@@ -29,7 +29,7 @@ export default class PleaseConfirm extends TrackerReact(PureComponent) {
                 <FlatButton
                     label="resend confirmation message"
                     primary={true}
-                    onTouchTap={() => Meteor.call("send-verification-link")}
+                    onTouchTap={() => Meteor.call("send-verification-link", Meteor.user().emails[0].address)}
                 />
             </Dialog>
         )

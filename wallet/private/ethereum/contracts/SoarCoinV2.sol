@@ -6,11 +6,11 @@ import "./Token.sol";
 import "./SoarCoinImplementationV03.sol";
 
 
-contract SoarCoin is Owned, Token {
+contract SoarCoinV2 is Owned, Token {
 
     SoarCoinImplementationV03 implementation;
 
-    function SoarCoin(SoarCoinImplementationV03 _implementation) {
+    function SoarCoinV2(SoarCoinImplementationV03 _implementation) {
         implementation = _implementation;
     }
 

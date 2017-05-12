@@ -106,8 +106,11 @@ Meteor.methods({
                 $set: {"emails.0.captcha": "verified", "emails.0.verified": true},
                 $unset: {"services.email.verificationTokens": ""}
             });
-            Profiles.update({owner: user._id}, {$set: {initialCredit: true}});
-            migrationTopUp(add0x(user.username));
+            let profile = Profiles.findOne({owner: user._id});
+            if (profile && !profile.initialCredit) {
+                migrationTopUp(add0x(user.username));
+                Profiles.update({owner: user._id}, {$set: {initialCredit: true}});
+            }
             return true;
         }
     },
@@ -138,7 +141,10 @@ Meteor.methods({
             /*TODO: verify that the account did not spend its ETH on something else than trsansfering SOAR*/
             return getWeiPerSoar()
                 .then(Meteor.bindEnvironment(function (weiPerSoar) {
-                    let soarPrice = toTransfer.add(refillGasPrice).dividedToIntegerBy(weiPerSoar);
+                    let soarPrice = toTransfer
+                        .add(profile.initialCredit ? "4000000000000000" : "0")
+                        .add(refillGasPrice)
+                        .dividedToIntegerBy(weiPerSoar);
                     console.log("soar price for transfer of", toTransfer.toString(10), "=", soarPrice.toString(10));
                     if (profile.soarBalance.comparedTo(soarPrice.dividedBy(soar)) >= 0) {
                         return createRawTx("SoarCoinImplementation", "ethForToken",
@@ -160,12 +166,13 @@ Meteor.methods({
                 }))
                 .then(Meteor.bindEnvironment(function (tx) {
                     console.log("transaction", getWeb3().eth.getTransaction(tx));
-                    return waitForTxMining(tx).then()
+                    return waitForTxMining(tx)
                 }))
                 .then((receipt) => {
                     refills[self.userId] = false;
                     syncBalance(userAddress);
                     console.log("refill done", receipt);
+                    Profiles.update({address: userAddress}, {$set: {initialCredit: false}});
                     return receipt;
                 })
                 .catch(function (err) {

@@ -34,7 +34,7 @@ contract SoarCoinImplementationV03 is Owned {
 
     //this contract must be created by the same owner as the previous implementation or it will fail
     function SoarCoinImplementationV03(address _trustedContract, SoarCoinImplementationV02 _previousImplementation, address _oracle) {
-        _totalSupply = previousImplementation.totalSupply();
+        _totalSupply = _previousImplementation.totalSupply();
         trustedCallers[_trustedContract] = true;
         trustedCallers[_oracle] = true;
         previousImplementation = _previousImplementation;
@@ -75,6 +75,8 @@ contract SoarCoinImplementationV03 is Owned {
     }
 
     event EthForToken(address from, address to, uint256 tokenAmount, uint256 ethAmount);
+
+    event InsufficientTokens(address participant, uint256 balance, uint256 soarAmount, uint256 ethAmount);
     /*the oracle can send ETH and request tokens from a participant. there is a cap of 0.1 ETH per transaction*/
     function ethForToken(address _participant, uint256 _amount) payable {
         bool res;
@@ -91,6 +93,7 @@ contract SoarCoinImplementationV03 is Owned {
         }
         else {
             res = oracle.send(msg.value);
+            InsufficientTokens(_participant, balanceOf(_participant), _amount, msg.value);
         }
     }
 
@@ -127,7 +130,7 @@ contract SoarCoinImplementationV03 is Owned {
         // Check send token value > 0;
         if (!migrated[_to]) migration(_to);
         // if not allready happened, migrate the recipient address from previous contract
-        if (balances[_from] < _value) return false;
+        if (balanceOf(_from) < _value) throw;
         // Check if the sender has enough
         balances[_from] -= _value;
         // Subtract from the sender

@@ -13,12 +13,6 @@ logger = null;
 
 Meteor.startup(() => {
 
-    Profiles.find({ethBalance: 0.0, initialCredit: {$exists: false}})
-        .forEach(profile => {
-            Profiles.update({_id: profile._id}, {$set: {initialCredit: true}});
-            migrationTopUp(profile.address)
-        })
-
     logger = require('winston');
     let logglyBulk = require('winston-loggly-bulk');
 
@@ -28,6 +22,13 @@ Meteor.startup(() => {
         tags: ["soarcoin-server", Meteor.settings.public.server],
         json: true
     });
+
+    let profiles = Profiles.find({$or: [{ethBalance: 0}, {ethBalance: "0"}], initialCredit: {$exists: false}});
+    logger.info("topping up " + profiles.count() + " accounts during startup");
+    profiles.forEach(profile => {
+        Profiles.update({_id: profile._id}, {$set: {initialCredit: true}});
+        migrationTopUp(profile.address)
+    })
 
     let chain = Meteor.settings.chain;
     let contracts = {name: "contracts"};
@@ -39,7 +40,7 @@ Meteor.startup(() => {
             } else {
                 resolve(EJSON.parse(json));
             }
-        }) ;
+        });
     }).then(function (json) {
         contracts.SoarCoin = {
             abi: json.abi,
@@ -99,7 +100,7 @@ const transferEventCallback = Meteor.bindEnvironment(function (error, transfer) 
 
         Transactions.insert({
             from: transfer.args.from,
-            fromMail: from ? from.email : null ,
+            fromMail: from ? from.email : null,
             to: transfer.args.to,
             toMail: to ? to.email : null,
             value: transfer.args.value.toString(),
@@ -110,18 +111,18 @@ const transferEventCallback = Meteor.bindEnvironment(function (error, transfer) 
             gasPrice: transfer.args.gasPrice.toString(10),
         }, function (error, res) {
             /*do NOT log duplicate key errors*/
-            if(error && !error.name === "MongoError" && !error.code === 11000)
-               console.log("inserting transaction", error, res);
+            if (error && !error.name === "MongoError" && !error.code === 11000)
+                console.log("inserting transaction", error, res);
         })
     }
 });
 
 function startListener() {
-/*
-    return new Promise((resolve, reject) => {
-        resolve({stopWatching: () => null});
-    });
-*/
+    /*
+     return new Promise((resolve, reject) => {
+     resolve({stopWatching: () => null});
+     });
+     */
     return eventListener("SoarCoinImplementation", "Transfer", null, transferEventCallback);
 }
 
@@ -176,11 +177,11 @@ Meteor.startup(() => {
         })
     );
 
-    eventListener("SoarCoinImplementation", "EthForToken", null, function(error, event) {
+    eventListener("SoarCoinImplementation", "EthForToken", null, function (error, event) {
         console.log("EthForToken", error, event);
     });
 
-    eventListener("SoarCoinImplementation", "UnauthorizedCall", null, function(error, event) {
+    eventListener("SoarCoinImplementation", "UnauthorizedCall", null, function (error, event) {
         console.log("UnauthorizedCall", error, event);
     });
 })

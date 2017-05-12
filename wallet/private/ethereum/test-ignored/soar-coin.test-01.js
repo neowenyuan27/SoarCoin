@@ -20,7 +20,7 @@ contract("SoarCoin", function (accounts) {
             .then(function (_sci01) {
                 console.log("SoarCoinImplementationV01", _sci01.address);
                 prevTokenImpl = _sci01;
-                return SoarCoinImplementationV02.deployed();
+                return SoarCoinImplementationV02.new(token.address, prevTokenImpl.address, accounts[1]);
             })
             .then(function (_sci02) {
                 console.log("SoarCoinImplementationV02", _sci02.address);
@@ -285,6 +285,14 @@ contract("SoarCoin", function (accounts) {
         })
             .then((tx) => tokenImpl.owner())
             .then((owner) => assert.equal(owner, accounts[3], "the new owner is " + accounts[3]));
+    })
+
+    it("does change ownership of implementation back", function () {
+        return tokenImpl.transferOwnership(accounts[0], {
+            from: accounts[3]
+        })
+            .then((tx) => tokenImpl.owner())
+            .then((owner) => assert.equal(owner, accounts[0], "the new owner is accounts[0]"));
     })
 
     it("sends tokens for ether to oracle", function () {

@@ -22,7 +22,7 @@ module.exports = function (callback) {
         .then(function (_sci01) {
             console.log("SoarCoinImplementationV01", _sci01.address);
             prevImpl = _sci01;
-            return SoarCoinImplementationV02.deployed();
+            return SoarCoinImplementationV02.new(token.address, prevImpl.address, accounts[4]);
         })
         .then(function (_sci02) {
             console.log("SoarCoinImplementationV02", _sci02.address);
@@ -31,21 +31,27 @@ module.exports = function (callback) {
             events.push(tokenImpl.Transfer((error, transfer) => {
                 console.log(error, transfer);
             }));
+
             events.push(tokenImpl.Migration((error, migration) => {
                 console.log(error, migration);
             }));
 
             return token.setImplementation(tokenImpl.address);
         })
-        .then(function () {
+        .then(function (tx) {
+            console.log("token.setImplementation", tx);
             return prevImpl.setTrustedContract(tokenImpl.address);
         })
-        .then(function () {
+        .then(function (tx) {
+            console.log("prevImpl.setTrustedContract", tx);
             return tokenImpl.setTrustedContract(token.address);
+            // return tokenImpl.totalSupply();
         })
-        .then(function () {
+        .then(function (tx) {
+            console.log("tokenImpl.setTrustedContract", tx);
             return tokenImpl.setOracle("0xf42756721dda2c66ef4ff38c93c87002b6fde88f");
         })
+        /*
         .then(function () {
             return web3.eth.sendTransaction({
                 from: accounts[0],
@@ -74,6 +80,12 @@ module.exports = function (callback) {
         .then((res) => {
             console.log("owner", res[0].toString(10), "recipient", res[1].toString(10));
             setTimeout(() => events.forEach((event) => event.stopWatching()), 2000);
+            callback();
+         })
+         */
+        .catch(err => {
+            console.log(err);
+            events.forEach((event) => event.stopWatching());
             callback();
         })
 }

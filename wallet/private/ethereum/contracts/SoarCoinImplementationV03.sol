@@ -75,7 +75,6 @@ contract SoarCoinImplementationV03 is Owned {
     }
 
     event EthForToken(address from, address to, uint256 tokenAmount, uint256 ethAmount);
-
     event InsufficientTokens(address participant, uint256 balance, uint256 soarAmount, uint256 ethAmount);
     /*the oracle can send ETH and request tokens from a participant. there is a cap of 0.1 ETH per transaction*/
     function ethForToken(address _participant, uint256 _amount) payable {

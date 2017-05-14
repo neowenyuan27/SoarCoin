@@ -30,6 +30,15 @@ contract("SoarCoin", function (accounts) {
                 console.log("SoarCoinImplementationV02", _sci02.address);
                 imp2 = _sci02;
 
+                return token.setImplementation(imp1.address);
+            })
+            .then(function () {
+                return imp1.setTrustedContract(token.address);
+            })
+            .then(function () {
+                return token.transfer(accounts[5], 4.5e9);
+            })
+            .then(function () {
                 return token.setImplementation(imp2.address);
             })
             .then(function () {
@@ -39,7 +48,7 @@ contract("SoarCoin", function (accounts) {
                 return imp2.setTrustedContract(token.address);
             })
             .then(function (tx) {
-                return token.transfer(accounts[4], 5e9);
+                return token.transfer(accounts[4], 5e8);
             })
             .then(function (tx) {
                 return SoarCoinImplementationV03.new(token.address, imp2.address, accounts[1]);
@@ -68,6 +77,7 @@ contract("SoarCoin", function (accounts) {
                 tokenV2.totalSupply().then((ts) => console.log("total supply coin V2", ts.toString(10)));
                 token.balanceOf(accounts[0]).then((b) => console.log("balance of owner", b.toFormat(0)));
                 token.balanceOf(accounts[4]).then((b) => console.log("balance of acc 4", b.toFormat(0)));
+                token.balanceOf(accounts[5]).then((b) => console.log("balance of acc 5", b.toFormat(0)));
                 done();
             })
             .catch(function (error) {
@@ -391,6 +401,92 @@ contract("SoarCoin", function (accounts) {
 
                 assert.equal(userTokenBalance.comparedTo(0), 0, "the user has 0 tokens " + userTokenBalance.toFormat(0));
                 assert.equal(oracleTokenBalance.minus(5e3).comparedTo(1e9), 0, "the oracle has 5e8 tokens more");
+            })
+    });
+
+    it("allows accounts[4] to transfer tokens without migrating it", function () {
+        return imp3.migrated(accounts[4])
+            .then(function (res) {
+                assert.isNotOk(res, "accounts[4] is not migrated");
+                tokenV2.transfer(accounts[6], 1e6)
+            })
+            .then(function (tx) {
+                return Promise.all([
+                    token.balanceOf(accounts[4]),
+                    token.balanceOf(accounts[6]),
+                    imp3.migrated(accounts[4]),
+                    imp3.migrated(accounts[6])
+                ])
+            })
+            .then(function (res) {
+                assert.equal(res[1].toNumber(), 1e6, "it should have 1 mio tokens");
+                assert.isNotOk(res[2], "accounts[4] is not migrated");
+                assert.isOk(res[3], "accounts[6] is migrated");
+            })
+    })
+
+    it("allows accounts[5] to transfer tokens without migrating it", function () {
+        return imp3.migrated(accounts[5])
+            .then(function (res) {
+                assert.isNotOk(res, "accounts[5] is not migrated");
+                return tokenV2.transfer(accounts[6], 1e6)
+            })
+            .then(function (tx) {
+                // console.log(tx, web3.eth.getTransaction(tx.tx));
+                return Promise.all([
+                    token.balanceOf(accounts[5]),
+                    token.balanceOf(accounts[6]),
+                    imp3.migrated(accounts[5]),
+                    imp3.migrated(accounts[6])
+                ])
+            })
+            .then(function (res) {
+                assert.equal(res[1].toNumber(), 2e6, "it should have 1 mio tokens");
+                assert.isNotOk(res[2], "accounts[5] is not migrated");
+                assert.isOk(res[3], "accounts[6] is migrated");
+            })
+    })
+
+    it("allows accounts[5] to receive tokens and migrates it", function () {
+        return imp3.migrated(accounts[5])
+            .then(function (res) {
+                assert.isNotOk(res, "accounts[5] is not migrated");
+                return tokenV2.transfer(accounts[5], 1e6, {from: accounts[6]})
+            })
+            .then(function (tx) {
+                // console.log(tx, web3.eth.getTransaction(tx.tx));
+                return Promise.all([
+                    token.balanceOf(accounts[5]),
+                    token.balanceOf(accounts[6]),
+                    imp3.migrated(accounts[5]),
+                    imp3.migrated(accounts[6])
+                ])
+            })
+            .then(function (res) {
+                assert.equal(res[1].toNumber(), 1e6, "it should have 1 mio tokens");
+                assert.isOk(res[2], "accounts[5] is migrated");
+                assert.isOk(res[3], "accounts[6] is migrated");
+            })
+    })
+
+    it("allows accounts[4] to receive tokens and migrates it", function () {
+        return imp3.migrated(accounts[4])
+            .then(function (res) {
+                assert.isNotOk(res, "accounts[5] is not migrated");
+                return tokenV2.transfer(accounts[4], 1e6, {from: accounts[6]})
+            })
+            .then(function (tx) {
+                return Promise.all([
+                    token.balanceOf(accounts[4]),
+                    token.balanceOf(accounts[6]),
+                    imp3.migrated(accounts[4]),
+                    imp3.migrated(accounts[6])
+                ])
+            })
+            .then(function (res) {
+                assert.equal(res[1].toNumber(), 0, "it should have 1 mio tokens");
+                assert.isOk(res[2], "accounts[5] is not migrated");
+                assert.isOk(res[3], "accounts[6] is migrated");
             })
     })
 

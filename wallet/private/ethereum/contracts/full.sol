@@ -105,14 +105,15 @@ contract SoarCoinImplementationV01 is Owned {
     }
 
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-        return false;
+        return _from == _to && _value > 0;
     }
 
     function approve(address _spender, uint256 _value) returns (bool success) {
-        return false;
+        return _spender == 0x0 && _value > 0;
     }
 
     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+        if (_owner == _spender) return 0;
         return 0;
     }
 
@@ -261,14 +262,15 @@ contract SoarCoinImplementationV02 is Owned {
     }
 
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-        return false;
+        return _from == _to && _value > 0;
     }
 
     function approve(address _spender, uint256 _value) returns (bool success) {
-        return false;
+        return _spender == 0x0 && _value > 0;
     }
 
     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+        if (_owner == _spender) return 0;
         return 0;
     }
 
@@ -425,14 +427,15 @@ contract SoarCoinImplementationV03 is Owned {
     }
 
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-        return false;
+        return _from == _to && _value > 0;
     }
 
     function approve(address _spender, uint256 _value) returns (bool success) {
-        return false;
+        return _spender == 0x0 && _value > 0;
     }
 
     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+        if (_owner == _spender) return 0;
         return 0;
     }
 

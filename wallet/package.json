@@ -1,0 +1,33 @@
+{
+  "name": "wallet",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "babel-runtime": "^6.20.0",
+    "bcrypt": "^1.0.2",
+    "bignumber.js": "^4.0.1",
+    "crypto-js": "^3.1.9-1",
+    "eth-lightwallet": "^2.5.4",
+    "flag-icon-css": "^2.8.0",
+    "install": "^0.8.9",
+    "loggly-console": "^0.1.0",
+    "material-ui": "^0.17.3",
+    "meteor-node-stubs": "~0.2.4",
+    "npm": "^4.5.0",
+    "prop-types": "^15.5.8",
+    "react": "^15.5.4",
+    "react-copy-to-clipboard": "^5.0.0",
+    "react-dom": "^15.5.4",
+    "react-intl": "^2.2.3",
+    "react-qr-svg": "^1.0.3",
+    "react-router": "^4.1.1",
+    "react-router-dom": "^4.1.1",
+    "react-swipeable-views": "^0.12.0",
+    "react-tap-event-plugin": "^2.0.1",
+    "web3": "^0.18.4",
+    "winston": "^2.3.1",
+    "winston-loggly-bulk": "^1.4.2"
+  }
+}

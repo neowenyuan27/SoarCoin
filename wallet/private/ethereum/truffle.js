@@ -14,7 +14,14 @@ module.exports = {
             network_id: "*"
         },
 
-        testnet: {
+        test: {
+            host: "localhost",
+            port: 8545,
+            gas: 4612388,
+            network_id: "*" // Match any network id
+        },
+
+        rinkeby: {
             host: "localhost",
             port: 8545,
             gas: 4612388,

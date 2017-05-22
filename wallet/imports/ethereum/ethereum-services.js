@@ -34,7 +34,7 @@ export const getWeb3 = (event) => {
             eventWeb3 = w3;
         else
             initialisedWeb3 = w3;
-        try{
+        try {
             let latestBlock = w3.eth.getBlock(w3.eth.blockNumber);
         } catch (error) {
             logger.error(error);
@@ -44,29 +44,29 @@ export const getWeb3 = (event) => {
     return w3;
 };
 
+let pwDerivedKeys = {};
 export const signAndSubmit = (password, rawTx, from) => {
     let address = from || add0x(Meteor.user().username);
 
-    return new Promise((resolve, reject) => {
-        getKeystore(password).then(function (wallet) {
-            wallet.keyFromPassword(password, (err, pwDerivedKey) => {
-                if (err) {
-                    reject(err);
-                    return;
+    return getKeystore(password)
+        .then(function (wallet) {
+            return new Promise((resolve, reject) => {
+                if (!pwDerivedKeys[from]) {
+                    wallet.keyFromPassword(password, (err, pwDerivedKey) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            pwDerivedKeys[from] = pwDerivedKey;
+                            resolve(pwDerivedKey);
+                        }
+                    });
+                } else {
+                    resolve(pwDerivedKeys[from]);
                 }
-                let signedTxString = signing.signTx(wallet, pwDerivedKey, add0x(rawTx), address);
-                console.log("signedTxString", signedTxString);
-                submitRawTx(add0x(signedTxString.toString('hex')))
-                    .then((result) => {
-                        resolve(result);
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        reject(err);
-                    })
-            });
+            })
         })
-    })
+        .then(pwDerivedKey => signing.signTx(wallet, pwDerivedKey, add0x(rawTx), address))
+        .then(signedTxString => submitRawTx(add0x(signedTxString.toString('hex')), from))
 };
 
 export const getKeystore = ((password) => {
@@ -210,7 +210,7 @@ export const isValidAddress = function (address) {
     return false;
 };
 
-export const getWeiPerSoar = function() {
+export const getWeiPerSoar = function () {
     let eth4btc = 0;
     let soar4btc = 0;
     let one = new BigNumber(1);

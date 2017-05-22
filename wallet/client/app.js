@@ -12,10 +12,10 @@ injectTapEventPlugin();
 // Render the main app react component into the app div.
 // For more details see: https://facebook.github.io/react/docs/top-level-api.html#react.render
 Meteor.startup(() => {
-    logger = _LTracker;
-    logger.info = logger.push;
-    logger.debug = logger.push;
-    logger.error = logger.push;
+    logger = console || {};
+    logger.info = logger.log;
+    logger.debug = logger.log;
+    logger.error = logger.log;
 
     Session.set("language", navigator.language.substr(0, 2));
 

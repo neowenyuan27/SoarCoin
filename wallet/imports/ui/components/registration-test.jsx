@@ -1,52 +1,46 @@
 import React, {Component} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
+import Toggle from "material-ui/Toggle";
+import msgs from "../i18n/labels.js";
 
 export default class RegistrationTest extends TrackerReact(Component) {
     constructor(props, context) {
         super(props, context);
-        this.state = {validation: "pending"};
-        this._renderReaptcha = this._renderReaptcha.bind(this);
+        this.state = {
+            validation: "pending",
+            hidden: false
+        };
+        this._humanCheck = this._humanCheck.bind(this);
     }
 
-    _renderReaptcha() {
+    _humanCheck(event, checked) {
         let self = this;
-        Session.set("recaptcha-ready", false);
-        Meteor.setTimeout(function () {
-            grecaptcha.render('recaptcha-container', {
-                'sitekey': Meteor.settings.public.recaptcha.key,
-                'callback': function (captcha) {
-                    Meteor.call("verify-captcha", captcha, self.props.token, function (err, success) {
-                        if (err) {
-                            self.setState({
-                                validation: "failure",
-                                message: err.message
-                            });
-                            grecaptcha.reset();
-                        } else {
-                            self.setState({
-                                validation: "success",
-                            });
-                        }
-                    })
-                }
-                ,
-                'theme': 'light'
-            });
-        }, 1000);
+        if (checked) {
+            Meteor.callPromise("verify-captcha", this.props.token)
+                .then(() => self.setState({validation: "success"}))
+                .catch(() => self.setState({validation: "failure"}))
+        }
     }
 
     render() {
-        if (Session.get("recaptcha-ready")) this._renderReaptcha();
 
-        if (this.state.validation === "pending") return null;
-
+        if (this.state.validation === "pending") {
+            return (
+                <div>
+                    <h2>Please proove that you are human</h2>
+                    <Toggle
+                        label={msgs().login.human}
+                        onToggle={this._humanCheck}
+                    />
+                </div>
+            )
+        }
         if (this.state.validation === "success") {
             return (
                 <div>
                     <h2>Thank you for registering</h2>
                 </div>
             )
-
         } else {
             return (
                 <div>

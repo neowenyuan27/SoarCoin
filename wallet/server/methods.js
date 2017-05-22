@@ -1,16 +1,9 @@
-import {add0x, ether, getWeb3, getWeiPerSoar, signAndSubmit, soar} from "../imports/ethereum/ethereum-services";
-import {
-    callContractMethod,
-    createRawTx,
-    createRawValueTx,
-    waitForTxMining
-} from "../imports/ethereum/ethereum-contracts";
+import {getWeb3, getWeiPerSoar, signAndSubmit} from "../imports/ethereum/ethereum-services";
+import {callContractMethod, createRawTx, waitForTxMining} from "../imports/ethereum/ethereum-contracts";
 import {currentProfile, Profiles} from "../imports/model/profiles";
 import {Globals} from "../imports/model/globals";
-import {HTTP} from "meteor/http";
 import {Random} from "meteor/random";
 import {Email} from "meteor/email";
-import BigNumber from "bignumber.js";
 
 export const syncBalance = function (address) {
     return callContractMethod("SoarCoin", "balanceOf", address)
@@ -22,26 +15,6 @@ export const syncBalance = function (address) {
                 }
             });
         });
-}
-
-export const migrationTopUp = function (address) {
-    let oracleAddress = Globals.findOne({name: "keystore"}).address;
-    return createRawValueTx(address, "4000000000000000", oracleAddress)
-        .then(Meteor.bindEnvironment(function (tx) {
-            return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracleAddress)
-        }))
-        .then(Meteor.bindEnvironment(function (tx) {
-            console.log("transaction", getWeb3().eth.getTransaction(tx));
-            return waitForTxMining(tx).then()
-        }))
-        .then((receipt) => {
-            refills[self.userId] = false;
-            syncBalance(userAddress);
-            console.log("refill done", receipt);
-            return receipt;
-        })
-        .then(() => syncBalance(address))
-
 }
 
 let refills = {};
@@ -85,107 +58,22 @@ Meteor.methods({
         }
     },
 
-    "verify-captcha": function (captcha, token) {
-        let captchaResult = HTTP.post("https://www.google.com/recaptcha/api/siteverify",
-            {
-                params: {
-                    secret: Meteor.settings.recaptcha.secret,
-                    response: captcha
-                }
-            })
-
+    "verify-captcha": function (token) {
         let user = Meteor.users.findOne({"services.email.verificationTokens.token": token});
-        if (!captchaResult.data.success || !user) {
+        if (!user) {
             Meteor.users.update({"services.email.verificationTokens.token": token}, {
                 $set: {"emails.0.captcha": "unverified", "emails.0.verified": false},
                 $unset: {"services.email.verificationTokens": ""}
             });
-            throw new Meteor.Error(captchaResult.data.success ? "You provided an invalid token" : "You were identified as a robot");
+            throw new Meteor.Error("You provided an invalid token");
         } else {
             Meteor.users.update({"services.email.verificationTokens.token": token}, {
                 $set: {"emails.0.captcha": "verified", "emails.0.verified": true},
                 $unset: {"services.email.verificationTokens": ""}
             });
             let profile = Profiles.findOne({owner: user._id});
-            if (profile && !profile.initialCredit) {
-                migrationTopUp(add0x(user.username));
-                Profiles.update({owner: user._id}, {$set: {initialCredit: true}});
-            }
             return true;
         }
-    },
-
-    /*TODO: limit refill to once per hour*/
-    "refill-ether": function () {
-        /*do nothing if the user is not logged in or a refill is underway for that user*/
-        if (!this.userId || refills[this.userId]) {
-            console.log("refill underway for " + this.userId);
-            return "no refill";
-        }
-
-        let self = this;
-        /**compute the price in WEI for a transfer transaction*/
-        let profile = currentProfile();
-        let txCount = Meteor.settings.refillTxCount;
-        let gasPrice = new BigNumber(Meteor.settings.public.txGas).times(getWeb3().eth.gasPrice);
-        let refillGasPrice = new BigNumber(Meteor.settings.refillGas).times(getWeb3().eth.gasPrice);
-        let toTransfer = gasPrice.times(txCount).minus(getWeb3().eth.getBalance(profile.address));
-        let oracleAddress = Globals.findOne({name: "keystore"}).address;
-        let userAddress = currentProfile().address;
-
-        console.log("refill started for", userAddress, "sending", toTransfer.dividedBy(ether).toString(10));
-        refills[this.userId] = true;
-
-        /*the test aims to thwart micro transaction atacks*/
-        if (toTransfer.comparedTo(gasPrice.times(txCount - 2)) == 1) {
-            /*TODO: verify that the account did not spend its ETH on something else than trsansfering SOAR*/
-            return getWeiPerSoar()
-                .then(Meteor.bindEnvironment(function (weiPerSoar) {
-                    let soarPrice = toTransfer
-                        .add(profile.initialCredit ? "4000000000000000" : "0")
-                        .add(refillGasPrice)
-                        .dividedToIntegerBy(weiPerSoar);
-                    console.log("soar price for transfer of", toTransfer.toString(10), "=", soarPrice.toString(10));
-                    if (profile.soarBalance.comparedTo(soarPrice.dividedBy(soar)) >= 0) {
-                        return createRawTx("SoarCoinImplementation", "ethForToken",
-                            toTransfer.toString(10),
-                            oracleAddress,
-                            Meteor.settings.refillGas,
-                            userAddress,
-                            soarPrice)
-                    } else {
-                        return Promise.reject(
-                            "refill-ether insufficient SOAR " +
-                            "availalble " + profile.soarBalance.toString(10) + " " +
-                            "required " + soarPrice.dividedBy(soar).toString(10)
-                        );
-                    }
-                }))
-                .then(Meteor.bindEnvironment(function (tx) {
-                    return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracleAddress)
-                }))
-                .then(Meteor.bindEnvironment(function (tx) {
-                    console.log("transaction", getWeb3().eth.getTransaction(tx));
-                    return waitForTxMining(tx)
-                }))
-                .then((receipt) => {
-                    refills[self.userId] = false;
-                    syncBalance(userAddress);
-                    console.log("refill done", receipt);
-                    Profiles.update({address: userAddress}, {$set: {initialCredit: false}});
-                    return receipt;
-                })
-                .catch(function (err) {
-                    console.log(err);
-                    refills[self.userId] = false;
-                    throw new Meteor.Error(500, "no refill", err);
-                })
-        } else {
-            console.log("no refill necessary", toTransfer.toString(10));
-            refills[self.userId] = false;
-            return {refill: false};
-        }
-
     },
 
     "sync-user-details": function (recipient) {
@@ -200,10 +88,48 @@ Meteor.methods({
         return null;
     },
 
-    "get-wei-for-soar": function () {
-        let gasPrice = new BigNumber(Meteor.settings.public.txGas).times(getWeb3().eth.gasPrice);
-        let toTransfer = gasPrice.times(10);
-        let refillGasPrice = 0;
-        return getWeiPerSoar().then((weiPerSoar) => toTransfer.add(refillGasPrice).dividedToIntegerBy(weiPerSoar).toString(10));
+    "transfer-soar": function (amount, recipient) {
+        let profile = currentProfile();
+        let oracle = Globals.findOne({name: "keystore"});
+        if (profile.address != "0x0") {
+            let gasPrice = getWeb3().eth.gasPrice.times(Meteor.settings.public.txGas);
+
+            return getWeiPerSoar()
+                .then((weiPerSoar) => gasPrice.times(2).dividedToIntegerBy(weiPerSoar))
+                .then(txPrice => {
+                    gasPrice = txPrice;
+                    return callContractMethod("SoarCoin", "balanceOf", profile.address);
+                })
+                .then(balance => {
+                    if (balance.comparedTo(gasPrice.plus(amount)) < 0) {
+                        return Promise.reject("insufficient funds");
+                    }
+                    /*transfer the gas price in SOAR */
+                    return createRawTx("SoarCoinImplementation", "transfer", 0, oracle.address, 0,
+                        profile.address, oracle.address, gasPrice.toString(10))
+                })
+                .then(tx => {
+                    return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracle.address)
+                })
+                .then(tx => {
+                    return createRawTx("SoarCoinImplementation", "transfer", 0, oracle.address, 0, profile.address, recipient, amount)
+                })
+                .then(tx => {
+                    return signAndSubmit(Meteor.settings.ethPassword, tx.rawTx, oracle.address)
+                })
+                .then(Meteor.bindEnvironment(tx => {
+                    console.log("transaction", getWeb3().eth.getTransaction(tx));
+                    return waitForTxMining(tx).then()
+                }))
+                .then((receipt) => {
+                    syncBalance(profile.address);
+                    syncBalance(recipient);
+                    console.log("transfer done", receipt);
+                    return receipt;
+                })
+                .catch(err => {
+                    throw new Meteor.Error(err);
+                })
+        }
     }
 });

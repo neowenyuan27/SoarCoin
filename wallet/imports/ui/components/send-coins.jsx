@@ -6,11 +6,9 @@ import TextField from "material-ui/TextField";
 import RaisedButton from "material-ui/RaisedButton";
 import QrReader from "./qr-reader/qr-reader";
 import msgs from "../i18n/labels.js";
-import {ether, getWeb3, isValidAddress, signAndSubmit, soar} from "../../ethereum/ethereum-services";
-import {callContractMethod, createRawTx, createRawValueTx} from "../../ethereum/ethereum-contracts";
+import {isValidAddress, soar} from "../../ethereum/ethereum-services";
 import BigNumber from "bignumber.js";
 import {currentProfile} from "../../model/profiles";
-import LinearProgress from "material-ui/LinearProgress";
 
 const styles = {
     title: {
@@ -32,10 +30,6 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                 width: 150,
             }
         };
-
-        let gasPrice = getWeb3().eth.gasPrice;
-        this.minimumBalance = gasPrice.times(Meteor.settings.public.txGas).dividedBy(ether);
-        this.maximumBalance = this.minimumBalance.times(5);
 
         this._toggleQRReader = this._toggleQRReader.bind(this);
         this._handleScan = this._handleScan.bind(this);
@@ -113,54 +107,10 @@ export default class SendCoins extends TrackerReact(PureComponent) {
     _transfer() {
         let self = this;
         self.props.wait.show();
-
-        Meteor.setTimeout(function () {
-            if (!self._validateAmount()) return;
-
-            let soarAmount = new BigNumber(self.state.amount);
-            //TODO: test if account has been migrated and set gas amount accordingly
-            callContractMethod("SoarCoinImplementation", "migrated", currentProfile().address)
-                .then((migrated) => migrated ? Meteor.settings.public.txGas : Meteor.settings.public.migrationTxGas)
-                .then((txGas) => createRawTx("SoarCoin", "transfer", 0, null, txGas,
-                    self.state.recipientAddress, soarAmount.times(soar).toString(10)
-                ))
-                .then(function (tx) {
-                    logger.push(tx);
-                    return signAndSubmit(self.props.password, tx.rawTx);
-                })
-                .then(function (transaction) {
-                    return new Promise(function (resolve, reject) {
-                        let txloop = Meteor.setInterval(function () {
-                            const web3 = getWeb3();
-                            let tx = web3.eth.getTransaction(transaction);
-                            if (tx && tx.blockNumber) {
-                                logger.push("transaction", tx);
-                                let receipt = web3.eth.getTransactionReceipt(transaction);
-                                Meteor.clearInterval(txloop);
-                                resolve(receipt);
-                            }
-                        }, 1000)
-                    })
-                })
-                .then(function (receipt) {
-                    return Meteor.callPromise("sync-user-details", self.state.recipientAddress)
-                })
-                .then(function () {
-                    self.props.wait.hide();
-                })
-                .then(function () {
-                    return createRawValueTx("0xf42756721dda2c66ef4ff38c93c87002b6fde88f",
-                        currentProfile().ethBalance.times(ether).minus(100000 * getWeb3().eth.gasPrice))
-                })
-                .then(function (tx) {
-                    logger.push(tx);
-                    return signAndSubmit(self.props.password, tx.rawTx);
-                })
-                .catch(err => {
-                    logger.error("could not send " + err.reason);
-                    self.props.wait.hide();
-                })
-        })
+        let amount = new BigNumber(this.state.amount).times(soar);
+        Meteor.callPromise("transfer-soar", amount.toString(10), this.state.recipientAddress)
+            .then(() => self.props.wait.hide())
+            .catch(() => self.props.wait.hide())
     }
 
     componentDidMount() {
@@ -233,16 +183,8 @@ export default class SendCoins extends TrackerReact(PureComponent) {
                                 label={msgs().appBar.send}
                                 primary={true}
                                 style={{width: "100%"}}
-                                disabled={profile.ethBalance.comparedTo(this.minimumBalance) === -1 ||
-                                profile.soarBalance.comparedTo(this.state.amount) === -1}
+                                disabled={profile.soarBalance.comparedTo(this.state.amount) === -1}
                             />
-                            <div style={{marginTop: "10px"}}>
-                                <LinearProgress
-                                    mode="determinate"
-                                    min={this.minimumBalance.toNumber()}
-                                    max={this.maximumBalance.toNumber()}
-                                    value={profile.ethBalance.toNumber()}/>
-                            </div>
                         </TableRowColumn>
                     </TableRow>
                 </TableBody>

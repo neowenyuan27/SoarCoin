@@ -48,7 +48,8 @@ export default {
             duplicate: "this e-mail is already registered",
             incorrect: "this e-mail is not valid"
         },
-        waiting: "Waiting for e-mail verification"
+        waiting: "Waiting for e-mail verification",
+        human: "Toggle if you're human"
     },
     transactions: {
         address: "Address",

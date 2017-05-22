@@ -6,19 +6,19 @@
     "recipientAddress": "0xeb659231f47e036d197ab0c807e49e39155c9c6d",
     "transferAmount": "0.02",
     "ethNodeAddress": "https://kovan.infura.io/NgjvCOUF5UIhCgRKndzD",
-    "contractEvents": "http://localhost:8545",
+    "contractEvents": "http://eth.mngn.io:8551",
     "recaptcha": {
       "key": "6LdycR0UAAAAAMfqdi3_KWnwKTrpze_lUmVMgvnD"
     },
-    "txGas": 60000,
+    "txGas": 45000,
     "migrationTxGas": 120000
   },
   "refillGas": 65000,
   "refillTxCount": 4,
   "chain": "kovan",
   "ethPassword": "abc123",
-  "SoarCoinAddress": "0x240E6067e00ddaE5208Bc48AF90c359bBD94889E",
-  "SoarCoinImplementationAddress": "0x252D8D348b87e64e09e260c36767030826780aCa",
+  "SoarCoinAddress": "0xb65Bc26983acA3F161864Af04F5BcA8aecb00D1D",
+  "SoarCoinImplementationAddress": "0x76949b5AA753b91011de7B294c840F7b697a7D9C",
   "MAIL_URL": "smtp://postmaster%40mg.mngn.io:54ddffb3981e16c288ee6aaff70e03fa@smtp.mailgun.org:587",
   "supportEmail": "support@soarlabs.org",
   "recaptcha": {

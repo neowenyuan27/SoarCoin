@@ -134,6 +134,7 @@ export const createRawTx = function (contractName, funcName, value, from, provid
             gasEstimate = web3.toHex(providedEstimate);
         } else {
             gasEstimate = web3.toHex(web3.eth.estimateGas({
+                    from: address,
                     to: contract.address,
                     value: web3.toHex(value),
                     data: payloadData
@@ -141,7 +142,7 @@ export const createRawTx = function (contractName, funcName, value, from, provid
         }
 
         let nonce = getNonce(address);
-        console.log("the nonce is", nonce, "gas estimate", gasEstimate / 5);
+        console.log("the nonce is", nonce, "gas estimate", new BigNumber(gasEstimate, 16).toFormat(0));
 
         var rawTx = {
             nonce: nonce,
@@ -157,6 +158,7 @@ export const createRawTx = function (contractName, funcName, value, from, provid
 
         return {
             rawTx: rawTxString,
+            nonce: nonce,
             transactionCost: new BigNumber(gasEstimate.toString()).times(gasPrice).dividedBy(ether).toNumber(),
             accountBalance: web3.eth.getBalance(address).dividedBy(ether).toNumber(),
         };
@@ -166,26 +168,29 @@ export const createRawTx = function (contractName, funcName, value, from, provid
 
 };
 
-export const submitRawTx = function (rawTxHexString) {
+export const submitRawTx = function (rawTxHexString, from) {
     let txHash = null;
     if (rawTxHexString.length > 2 && rawTxHexString.slice(0, 2) === "0x") {
         txHash = getWeb3().sha3(rawTxHexString.substr(2), {encoding: "hex"});
     } else {
         txHash = getWeb3().sha3(rawTxHexString, {encoding: "hex"});
     }
-    console.log("computed hash is", txHash);
+    let lastNonce = getNonce(from);
     return new Promise((resolve, reject) => {
         if (!getWeb3().eth.getTransaction(txHash)) {
             getWeb3().eth.sendRawTransaction(add0x(rawTxHexString), function (err, hash) {
-                console.log("transaction hash is", hash);
                 if (err) {
                     reject(new Meteor.Error("web3-error", err.message));
                 } else {
+                    let polls = 0;
+                    while (getNonce(from) <= lastNonce) {
+                        polls++;
+                    }
+                    console.log("polled", polls, "times for the nonce to increase");
                     resolve(hash);
                 }
             });
         } else {
-            console.log("transaction already exists", txHash);
             resolve(txHash);
         }
     })
@@ -216,8 +221,8 @@ export const waitForTxMining = function (txHash) {
 }
 
 Meteor.methods({
-    "submit-raw-tx": function (rawTxHexString) {
-        return submitRawTx(rawTxHexString);
+    "submit-raw-tx": function (rawTxHexString, from) {
+        return submitRawTx(rawTxHexString, from);
     },
 
     "wait-for-tx-mining": function (txHash, sender, recipient) {

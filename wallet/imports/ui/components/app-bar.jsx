@@ -1,6 +1,5 @@
 import React, {PureComponent} from "react";
 import TrackerReact from "meteor/ultimatejs:tracker-react";
-import {Tracker} from "meteor/tracker";
 import AppBar from "material-ui/AppBar";
 import Drawer from "material-ui/Drawer";
 import Snackbar from "material-ui/Snackbar";
@@ -8,9 +7,9 @@ import IconButton from "material-ui/IconButton";
 import FontIcon from "material-ui/FontIcon";
 import Menu from "material-ui/svg-icons/navigation/menu";
 import msgs from "../i18n/labels.js";
-import {currentProfile, Profiles} from "../../model/profiles";
+import {currentProfile} from "../../model/profiles";
 import {Transactions} from "../../model/transactions";
-import {ether, getWeb3, soar} from "../../ethereum/ethereum-services";
+import {soar} from "../../ethereum/ethereum-services";
 import BigNumber from "bignumber.js";
 import {white} from "material-ui/styles/colors";
 import {List, ListItem} from "material-ui/List";
@@ -44,37 +43,6 @@ export default class WalletAppBar extends TrackerReact(PureComponent) {
                     });
                     Meteor.call("sync-user-details");
                 }
-            }
-        })
-
-        Tracker.autorun(function () {
-            if (currentProfile().address !== "0x0") {
-                const checkEthBalance = function () {
-                    let ethBalance = currentProfile().ethBalance.times(ether);
-                    let gasPrice = new BigNumber(Meteor.settings.public.txGas).times(getWeb3().eth.gasPrice);
-                    /**if there is not enough gas to create two transactions*/
-                    if (ethBalance.dividedBy(gasPrice).comparedTo(2) === -1) {
-                        Meteor.call("refill-ether", function (err, res) {
-                            if (err) {
-                                logger.info("could not refill", err);
-                                self.setState({
-                                    toastOpen: true,
-                                    toastMessage: err.details
-                                });
-                            }
-                        });
-                    }
-                };
-                /**check the ETH balance when the application first renders and then every time the balance changes*/
-                checkEthBalance();
-
-                Profiles.find({owner: Meteor.userId()}).observe({
-                    changed: function (id, fields) {
-                        if (fields.ethBalance) {
-                            checkEthBalance();
-                        }
-                    }
-                })
             }
         })
 

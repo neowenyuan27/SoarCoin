@@ -133,10 +133,10 @@ export default class LoginDialog extends TrackerReact(PureComponent) {
                         .then(() => {
                             Meteor.loginWithPassword(self.state.username, mnemonic, (err) => {
                                 if (err)
-                                    throw err;
+                                    return Promise.reject(err);
                                 else {
-
-                                    Promise.resolve();
+                                    Meteor.call("sync-user-details");
+                                    return Promise.resolve();
                                 }
                             });
                         })

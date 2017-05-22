@@ -6,7 +6,6 @@ import {eventListener, getContract} from "../imports/ethereum/ethereum-contracts
 import {Globals} from "../imports/model/globals";
 import {Transactions} from "../imports/model/transactions";
 import {Profiles} from "../imports/model/profiles";
-import {migrationTopUp} from "./methods";
 
 let keystore = null;
 logger = null;
@@ -22,13 +21,6 @@ Meteor.startup(() => {
         tags: ["soarcoin-server", Meteor.settings.public.server],
         json: true
     });
-
-    let profiles = Profiles.find({$or: [{ethBalance: 0}, {ethBalance: "0"}], initialCredit: {$exists: false}});
-    logger.info("topping up " + profiles.count() + " accounts during startup");
-    profiles.forEach(profile => {
-        Profiles.update({_id: profile._id}, {$set: {initialCredit: true}});
-        migrationTopUp(profile.address)
-    })
 
     let chain = Meteor.settings.chain;
     let contracts = {name: "contracts"};
@@ -118,11 +110,6 @@ const transferEventCallback = Meteor.bindEnvironment(function (error, transfer) 
 });
 
 function startListener() {
-    /*
-     return new Promise((resolve, reject) => {
-     resolve({stopWatching: () => null});
-     });
-     */
     return eventListener("SoarCoinImplementation", "Transfer", null, transferEventCallback);
 }
 
@@ -182,6 +169,6 @@ Meteor.startup(() => {
     });
 
     eventListener("SoarCoinImplementation", "UnauthorizedCall", null, function (error, event) {
-        console.log("UnauthorizedCall", error, event);
+        console.log("SoarCoinImplementation => UnauthorizedCall", error, event);
     });
 })
